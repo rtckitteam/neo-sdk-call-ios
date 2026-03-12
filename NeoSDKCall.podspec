@@ -2,26 +2,26 @@
 
 
 Pod::Spec.new do |spec|
-  spec.name         = "SDKRTCKit"
-  spec.module_name  = "SDKRTCKit"
+  spec.name         = "NeoSDKCall"
+  spec.module_name  = "NeoSDKCall"
   spec.version      = "1.2.1-rc.4"
   spec.summary      = "SDK for calling app to app webrtc."
   spec.description  = <<-DESC
     CiCareSDKRTC is a SDK for calling app to app or app to phone via webrtc.
   DESC
-  spec.homepage     = "https://github.com/cicareteam/cicare-sdk-rtc-ios"
+  spec.homepage     = "https://github.com/rtckitteam/neo-sdk-call-ios"
   spec.license      = { :type => "Commercial", :file => "LICENSE" }
-  spec.readme       = "https://raw.githubusercontent.com/cicareteam/cicare-sdk-rtc-ios/refs/heads/main/README.md"
-  spec.author       = { "RTCKit Team" => "dev@c-icare.cc" }
+  spec.readme       = "https://raw.githubusercontent.com/rtckitteam/neo-sdk-call-ios/refs/heads/main/README.md"
+  spec.author       = { "RTCKit Team" => "dev@neokarya.co.id" }
   spec.platform     = :ios, "12.0"
   spec.swift_version = ['5.9', '5.10']
 
   # Source code SDK
-  spec.source       = { :git => "https://github.com/cicareteam/cicare-sdk-rtc-ios.git", :tag => spec.version.to_s }
+  spec.source       = { :git => "https://github.com/rtckitteam/neo-sdk-call-ios.git", :tag => spec.version.to_s }
 
   # Jika menggunakan source code
-  spec.source_files = "Sources/RtcKitSdkCall/**/*.{swift,h,m,xcassets}"
-  # spec.resources = ['Sources/RtcKitSdkCall/Media.xcassets']
+  spec.source_files = "Sources/NeoSdkCall/**/*.{swift,h,m,xcassets}"
+  # spec.resources = ['Sources/NeoSdkCall/Media.xcassets']
 
 
   # If use Framework binary

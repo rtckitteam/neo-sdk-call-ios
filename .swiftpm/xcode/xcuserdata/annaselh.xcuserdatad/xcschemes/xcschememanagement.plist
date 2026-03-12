@@ -9,10 +9,15 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
-		<key>RtcKitSdkCall.xcscheme_^#shared#^_</key>
+		<key>NeoSdkCall.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
+		</dict>
+		<key>RtcKitSdkCall.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
@@ -23,6 +28,16 @@
 			<true/>
 		</dict>
 		<key>CicareSdkCallTests</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>RtcKitSdkCall</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>RtcKitSdkCallTests</key>
 		<dict>
 			<key>primary</key>
 			<true/>

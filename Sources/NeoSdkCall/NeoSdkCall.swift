@@ -4,9 +4,9 @@ import Foundation
 import AVFoundation
 import SwiftUI
 
-public class RtcKitSdkCall: CallEventListener {
+public class NeoSdkCall: CallEventListener {
     
-    public static let shared: RtcKitSdkCall = RtcKitSdkCall()
+    public static let shared: NeoSdkCall = NeoSdkCall()
     
     private var vc: UIViewController?
     
