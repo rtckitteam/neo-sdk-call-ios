@@ -1,6 +1,6 @@
 # NEO SDK Call iOS
 
-This SDK allows you to integrate **outgoing and incoming call features** into your iOS app using **CiCare SDK**.
+This SDK allows you to integrate **outgoing and incoming call features** into your iOS app using **NEO SDK**.
 
 ---
 
