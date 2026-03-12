@@ -1,4 +1,4 @@
-# CiCare SDK Call iOS
+# NEO SDK Call iOS
 
 This SDK allows you to integrate **outgoing and incoming call features** into your iOS app using **CiCare SDK**.
 
@@ -75,7 +75,7 @@ Add these keys for proper permission descriptions:
 Import module:
 
 ```swift
-import CicareSdkCall
+import NeoSdkCall
 ```
 
 Before starting a call, configure the API:
@@ -221,7 +221,7 @@ Error code list are:
 
 ## 🛠 Notes
 
-* `CicareSdkCall` is a **singleton**, always use `CicareSdkCall.shared` instead of creating a new instance.
+* `NeoSdkCall` is a **singleton**, always use `NeoSdkCall.shared` instead of creating a new instance.
 * Ensure **APNs VoIP certificate** or **token authentication** is correctly set up.
 * Test notifications and calls on a **real device** (VoIP push is not supported in simulators).
 * Make sure to request microphone permission before initiating a call.
