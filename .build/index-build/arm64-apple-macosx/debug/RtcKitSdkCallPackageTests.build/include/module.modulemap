@@ -1,0 +1,3 @@
+module RtcKitSdkCallPackageTests {
+    header "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCallPackageTests.build/include/RtcKitSdkCallPackageTests-Swift.h"
+}

@@ -143,6 +143,46 @@ public class RtcKitSdkCall: CallEventListener {
         //self.showCallScreen(calleeName: callerName, callStatus: CallStatus.incoming.rawValue, avatarUrl: callerAvatar, metaData: merged)
     }
 
+    public func outgoingSip(
+        callerId: String,
+        callerName: String = "Caller",
+        callerAvatar: String,
+        destination: String,
+        destinationName: String = "Callee",
+        destinationAvatar: String,
+        metaData: [String: String],
+        completion: @escaping (Result<Void, CallError>) -> Void
+    ) {
+        
+        let callerName = callerName == "" ? "Caller" : callerName
+        let calleeName = destinationName == "" ? "Callee" : destinationName
+        var merged = self.metaData.merging(metaData) { _, new in new }
+        merged["call_name_title"] = calleeName
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            CallManager.sharedInstance.outgoingCallSip(
+                handle: callerId,
+                destination: destination,
+                destinationName: destinationName,
+                destinationAvatar: destinationAvatar,
+                metaData: merged,
+                callData: CallSipSessionRequest(
+                    callerId: callerId,
+                    callerName: callerName,
+                    callerAvatar: callerAvatar,
+                    destination: destination
+                )
+            ) { error in
+                completion(error)
+            }
+        }
+        /*showCallScreen(
+            calleeName: calleeName,
+            callStatus: CallStatus.connecting.rawValue,
+            avatarUrl: calleeAvatar,
+            metaData: merged
+        )*/
+    }
+    
     public func outgoing(
         callerId: String,
         callerName: String = "Caller",

@@ -70,6 +70,8 @@ class WebRTCManager: NSObject {
     }
 
     func initMic() {
+        guard audioTrack == nil else { return }
+
         let audioSource = peerConnectionFactory.audioSource(with: RTCMediaConstraints(mandatoryConstraints: nil,
                                                                                       optionalConstraints: nil))
         
@@ -179,6 +181,40 @@ class WebRTCManager: NSObject {
         }
         //RTCAudioSession.sharedInstance().isAudioEnabled = enabled
     }
+    
+    func sendDTMF(digits: String,
+                  durationMs: Double = 160,
+                  interToneGapMs: Double = 70
+              ) -> Bool {
+
+                  guard let pc = peerConnection else { return false }
+
+        print(pc.senders)
+
+                  let audioSender = pc.senders.first { sender in
+                      sender.track is RTCAudioTrack
+                  }
+
+                  guard let dtmfSender = audioSender?.dtmfSender else {
+                      print("DTMF not supported on this PeerConnection")
+                      return false
+                  }
+
+                  if !dtmfSender.canInsertDtmf {
+                      print("DTMF cannot be inserted")
+                      return false
+                  }
+
+                  dtmfSender.insertDtmf(
+                      digits,
+                      duration: durationMs / 1000.0,
+                      interToneGap: interToneGapMs / 1000.0
+                  )
+
+                  print("DTMF sending: \(digits)")
+                  return true
+
+              }
 
     func close() {
         if (peerConnection.iceConnectionState == .connected ||

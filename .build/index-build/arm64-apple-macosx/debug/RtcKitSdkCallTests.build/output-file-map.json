@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCallTests.build/master.swiftdeps"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Tests/RtcKitSdkCallTests/CicareSdkCallTests.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCallTests.build/CicareSdkCallTests.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCallTests.build/CicareSdkCallTests.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCallTests.build/CicareSdkCallTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCallTests.build/CicareSdkCallTests.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCallTests.build/CicareSdkCallTests.dia"
+  }
+}

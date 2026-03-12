@@ -1,0 +1,16 @@
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/RtcKitSdkCall.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/notification/NotificationManager.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/APIService.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallError.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallManager.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallState.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallStatus.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/socket/SocketSignaling.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/Alert.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/CallScreenView.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/CircleButton.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/DTMFKeypadDelegate.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/MediaXCAssets.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/MultiLayerGradientView.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/webrtc/WebRTCManager.swift
+/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/DerivedSources/resource_bundle_accessor.swift

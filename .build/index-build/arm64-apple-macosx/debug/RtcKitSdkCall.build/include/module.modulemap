@@ -1,0 +1,3 @@
+module RtcKitSdkCall {
+    header "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/include/RtcKitSdkCall-Swift.h"
+}

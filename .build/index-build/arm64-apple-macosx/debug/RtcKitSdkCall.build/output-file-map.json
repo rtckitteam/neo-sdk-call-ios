@@ -1,0 +1,117 @@
+{
+  "": {
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/master.swiftdeps"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/RtcKitSdkCall.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/RtcKitSdkCall.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/RtcKitSdkCall.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/RtcKitSdkCall~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/RtcKitSdkCall.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/RtcKitSdkCall.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/notification/NotificationManager.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/NotificationManager.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/NotificationManager.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/NotificationManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/NotificationManager.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/NotificationManager.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/APIService.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/APIService.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/APIService.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/APIService~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/APIService.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/APIService.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallError.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallError.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallError.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallError~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallError.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallError.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallManager.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallManager.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallManager.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallManager.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallManager.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallState.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallState.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallState.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallState~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallState.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallState.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/services/CallStatus.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallStatus.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallStatus.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallStatus~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallStatus.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallStatus.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/socket/SocketSignaling.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/SocketSignaling.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/SocketSignaling.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/SocketSignaling~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/SocketSignaling.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/SocketSignaling.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/Alert.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/Alert.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/Alert.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/Alert~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/Alert.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/Alert.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/CallScreenView.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallScreenView.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallScreenView.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallScreenView~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallScreenView.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CallScreenView.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/CircleButton.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CircleButton.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CircleButton.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CircleButton~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CircleButton.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/CircleButton.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/DTMFKeypadDelegate.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/DTMFKeypadDelegate.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/DTMFKeypadDelegate.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/DTMFKeypadDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/DTMFKeypadDelegate.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/DTMFKeypadDelegate.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/MediaXCAssets.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MediaXCAssets.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MediaXCAssets.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MediaXCAssets~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MediaXCAssets.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MediaXCAssets.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/ui/MultiLayerGradientView.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MultiLayerGradientView.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MultiLayerGradientView.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MultiLayerGradientView~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MultiLayerGradientView.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/MultiLayerGradientView.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/Sources/RtcKitSdkCall/webrtc/WebRTCManager.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/WebRTCManager.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/WebRTCManager.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/WebRTCManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/WebRTCManager.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/WebRTCManager.dia"
+  },
+  "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/DerivedSources/resource_bundle_accessor.swift": {
+    "dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/resource_bundle_accessor.d",
+    "object": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/resource_bundle_accessor.swiftdeps",
+    "diagnostics": "/Users/annaselh/PROJECT/Swift/sdk-rtc-kit/.build/index-build/arm64-apple-macosx/debug/RtcKitSdkCall.build/resource_bundle_accessor.dia"
+  }
+}

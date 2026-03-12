@@ -29,7 +29,7 @@ public class CallScreenViewController: UIViewController {
     private var connectedButtonStack: UIStackView!
     
     private let keypadView = DTMFKeypadView()
-    private let keypadButton = UIButton(type: .system)
+    private var keypadButton: CircleIconButton!
     
     private var muteButton: CircleIconButton!
     private var speakerButton: CircleIconButton!
@@ -106,8 +106,7 @@ public class CallScreenViewController: UIViewController {
         monitor.start(queue: queue)
 
         setupUI()
-        setupKeypadButton()
-        setupKeypadView()
+            //setupKeypadView()
         requestMicrophonePermission { granted in
             /*if !granted {
                 CallManager.sharedInstance.endCallOnDeniedMic()
@@ -261,8 +260,8 @@ public class CallScreenViewController: UIViewController {
 
         guard isSipCall else { return }
 
-        showKeypad.toggle()
-        keypadView.isHidden = !showKeypad
+        keypadView.delegate = self
+        keypadView.show(in: self.view)
     }
     
     private func showErrorConnectionAlert(text: String, icon: UIImage?) {
@@ -315,26 +314,7 @@ public class CallScreenViewController: UIViewController {
         }
     }
     
-    private func setupKeypadButton() {
-
-        keypadButton.setImage(UIImage(named: "icon_keypad"), for: .normal)
-        keypadButton.tintColor = .black
-        keypadButton.addTarget(self, action: #selector(toggleKeypad), for: .touchUpInside)
-
-        keypadButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(keypadButton)
-
-        NSLayoutConstraint.activate([
-            keypadButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            keypadButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            keypadButton.widthAnchor.constraint(equalToConstant: 60),
-            keypadButton.heightAnchor.constraint(equalToConstant: 60)
-        ])
-
-        keypadButton.isHidden = !isSipCall
-    }
-    
-    private func setupKeypadView() {
+    /*private func setupKeypadView() {
         
         keypadView.delegate = self
         keypadView.translatesAutoresizingMaskIntoConstraints = false
@@ -348,7 +328,7 @@ public class CallScreenViewController: UIViewController {
             keypadView.bottomAnchor.constraint(equalTo: keypadButton.topAnchor, constant: -20),
             keypadView.heightAnchor.constraint(equalToConstant: 300)
         ])
-    }
+    }*/
     
     private func setupUI() {
         self.dismissed = false
@@ -537,7 +517,7 @@ public class CallScreenViewController: UIViewController {
             self.speakerButton.button.backgroundColor =  self.isSpeakerOn ? UIColor(hex: "00BABD")! : UIColor(hex: "E9F8F9")!
             let session = AVAudioSession.sharedInstance()
             do {
-                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
+                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP])
                 try session.setActive(true)
                 
                 // Toggle the audio route to speaker or default (e.g., earphone)
@@ -613,6 +593,17 @@ public class CallScreenViewController: UIViewController {
         muteButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
         muteButton.isEnabled = false
         
+        keypadButton = CircleIconButton(
+            icon: compatibleImage(named: "keypad", systemName: "circle.grid.3x3"),
+            labelText: self.metaData["call_btn_keypad"] ?? "Keypad",
+            iconColor: UIColor(hex: "17666A")!,
+            backgroundColor: UIColor(hex: "E9F8F9")!
+        ) { [weak self] in
+            self?.toggleKeypad()
+        }
+        
+        keypadButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        
         speakerButton = CircleIconButton(
             icon: compatibleImage(named: "speaker", systemName: "speaker.wave.2"),
             labelText: self.metaData["call_btn_speaker"] ?? "Speaker",
@@ -625,7 +616,7 @@ public class CallScreenViewController: UIViewController {
             self.speakerButton.button.backgroundColor =  self.isSpeakerOn ? UIColor(hex: "00BABD")! : UIColor(hex: "E9F8F9")!
             let session = AVAudioSession.sharedInstance()
             do {
-                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
+                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP])
                 try session.setActive(true)
                 
                 // Toggle the audio route to speaker or default (e.g., earphone)
@@ -639,10 +630,16 @@ public class CallScreenViewController: UIViewController {
             }
         }
         speakerButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
-        
-        let audioButtonStack = UIStackView(arrangedSubviews: [speakerButton, muteButton])
-        audioButtonStack.axis = .horizontal
-        audioButtonStack.spacing = 150
+        let audioButtonStack: UIStackView!
+        if (isSipCall) {
+            audioButtonStack = UIStackView(arrangedSubviews: [speakerButton, keypadButton, muteButton])
+            audioButtonStack.axis = .horizontal
+            audioButtonStack.spacing = 50
+        } else {
+            audioButtonStack = UIStackView(arrangedSubviews: [speakerButton, keypadButton, muteButton])
+            audioButtonStack.axis = .horizontal
+            audioButtonStack.spacing = 150
+        }
         audioButtonStack.distribution = .fillEqually
         audioButtonStack.alignment = .center
         audioButtonStack.translatesAutoresizingMaskIntoConstraints = false
@@ -667,10 +664,11 @@ public class CallScreenViewController: UIViewController {
 extension CallScreenViewController: DTMFKeypadDelegate {
 
     func didPressDTMF(_ digit: String) {
-
-        print("Send DTMF: \(digit)")
-
         CallManager.sharedInstance.sendDTMF(digit)
+    }
+    
+    func keypadDidClose() {
+        
     }
 
 }

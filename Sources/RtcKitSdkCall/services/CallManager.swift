@@ -139,7 +139,7 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     func sendDTMF(_ digit: String) {
-        
+        SocketSignaling.shared.sendDTMF(digit)
     }
     
     func outgoingCall(handle: String, calleeId: String, calleeName: String, calleeAvatar: String? = "", metaData: [String:String], callData: CallSessionRequest, completion: @escaping (Result<Void, CallError>) -> Void) {

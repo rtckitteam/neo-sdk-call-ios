@@ -286,6 +286,10 @@ class SocketSignaling: NSObject {
         }
     }
     
+    func sendDTMF(_ digit: String) {
+        let _ = webrtcManager?.sendDTMF(digits: digit)
+    }
+    
     func rejectCall() {
         callState = .ended
         emit("REJECT", [:])
