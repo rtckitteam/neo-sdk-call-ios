@@ -8,6 +8,8 @@ public class CallScreenViewController: UIViewController {
     var calleeName: String = ""
     var callStatus: String = ""
     var avatarUrl: String? = ""
+    var isSipCall: Bool = false
+    
     var metaData: [String: String] = [:]
     var dismissed = true
     var pendingDismissed = false
@@ -20,10 +22,14 @@ public class CallScreenViewController: UIViewController {
     // MARK: - UI Elements
     private let nameLabel = UILabel()
     var statusLabel = UILabel()
+    private var showKeypad = false
     private let avatarImageView = UIImageView()
     private let connectionLabel = UILabel()
     private var incomingButtonStack: UIStackView!
     private var connectedButtonStack: UIStackView!
+    
+    private let keypadView = DTMFKeypadView()
+    private let keypadButton = UIButton(type: .system)
     
     private var muteButton: CircleIconButton!
     private var speakerButton: CircleIconButton!
@@ -100,6 +106,8 @@ public class CallScreenViewController: UIViewController {
         monitor.start(queue: queue)
 
         setupUI()
+        setupKeypadButton()
+        setupKeypadView()
         requestMicrophonePermission { granted in
             /*if !granted {
                 CallManager.sharedInstance.endCallOnDeniedMic()
@@ -249,6 +257,14 @@ public class CallScreenViewController: UIViewController {
         self.status = status
     }
     
+    @objc func toggleKeypad() {
+
+        guard isSipCall else { return }
+
+        showKeypad.toggle()
+        keypadView.isHidden = !showKeypad
+    }
+    
     private func showErrorConnectionAlert(text: String, icon: UIImage?) {
         let toast = Alert(
             message: text,
@@ -297,6 +313,41 @@ public class CallScreenViewController: UIViewController {
         } else {
             return UIImage(named: named)
         }
+    }
+    
+    private func setupKeypadButton() {
+
+        keypadButton.setImage(UIImage(named: "icon_keypad"), for: .normal)
+        keypadButton.tintColor = .black
+        keypadButton.addTarget(self, action: #selector(toggleKeypad), for: .touchUpInside)
+
+        keypadButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(keypadButton)
+
+        NSLayoutConstraint.activate([
+            keypadButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
+            keypadButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            keypadButton.widthAnchor.constraint(equalToConstant: 60),
+            keypadButton.heightAnchor.constraint(equalToConstant: 60)
+        ])
+
+        keypadButton.isHidden = !isSipCall
+    }
+    
+    private func setupKeypadView() {
+        
+        keypadView.delegate = self
+        keypadView.translatesAutoresizingMaskIntoConstraints = false
+        keypadView.isHidden = true
+
+        view.addSubview(keypadView)
+
+        NSLayoutConstraint.activate([
+            keypadView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            keypadView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
+            keypadView.bottomAnchor.constraint(equalTo: keypadButton.topAnchor, constant: -20),
+            keypadView.heightAnchor.constraint(equalToConstant: 300)
+        ])
     }
     
     private func setupUI() {
@@ -611,6 +662,17 @@ public class CallScreenViewController: UIViewController {
         return [audioButtonStack, endButton]
     }
     
+}
+
+extension CallScreenViewController: DTMFKeypadDelegate {
+
+    func didPressDTMF(_ digit: String) {
+
+        print("Send DTMF: \(digit)")
+
+        CallManager.sharedInstance.sendDTMF(digit)
+    }
+
 }
 
 extension UIColor {

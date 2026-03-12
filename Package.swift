@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "CicareSdkCall",
+    name: "RtcKitSdkCall",
     platforms: [
         .iOS(.v12),
         .macOS(.v13)
@@ -12,8 +12,8 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "CicareSdkCall",
-            targets: ["CicareSdkCall"]),
+            name: "RtcKitSdkCall",
+            targets: ["RtcKitSdkCall"]),
     ],
     dependencies: [
         .package(url: "https://github.com/socketio/socket.io-client-swift", .upToNextMinor(from: "16.1.1")),
@@ -25,7 +25,7 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "CicareSdkCall",
+            name: "RtcKitSdkCall",
             dependencies: [
                 .product(name: "SocketIO", package: "socket.io-client-swift"),
                 .product(name: "WebRTC", package: "WebRTC"),
@@ -37,9 +37,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "CicareSdkCallTests",
+            name: "RtcKitSdkCallTests",
             dependencies: [
-                "CicareSdkCall",
+                "RtcKitSdkCall",
                 .product(name: "SocketIO", package: "socket.io-client-swift")
             ]
         ),

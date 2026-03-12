@@ -4,9 +4,9 @@ import Foundation
 import AVFoundation
 import SwiftUI
 
-public class CicareSdkCall: CallEventListener {
+public class RtcKitSdkCall: CallEventListener {
     
-    public static let shared: CicareSdkCall = CicareSdkCall()
+    public static let shared: RtcKitSdkCall = RtcKitSdkCall()
     
     private var vc: UIViewController?
     
@@ -116,10 +116,10 @@ public class CicareSdkCall: CallEventListener {
     
     public func incoming(
         callerId: String,
-        callerName: String = "Green SM Driver",
+        callerName: String = "Caller",
         callerAvatar: String = "",
         calleeId: String,
-        calleeName: String = " Green SM Customer",
+        calleeName: String = "Callee",
         calleeAvatar: String = "",
         checkSum: String,
         metaData: [String: String],
@@ -128,8 +128,8 @@ public class CicareSdkCall: CallEventListener {
         _ = NotificationManager.shared
         self.metaData["call_name_title"] = callerName
         
-        let callerName = callerName == "" ? "Green SM Driver" : callerName
-        _ = calleeName == "" ? "Green SM Customer" : calleeName
+        let callerName = callerName == "" ? "Caller" : callerName
+        _ = calleeName == "" ? "Callee" : calleeName
         let merged = self.metaData.merging(metaData) { _, new in new }
         CallManager.sharedInstance.reportIncomingCall(
             callerId: callerId,
@@ -145,18 +145,18 @@ public class CicareSdkCall: CallEventListener {
 
     public func outgoing(
         callerId: String,
-        callerName: String = "Green SM Driver",
+        callerName: String = "Caller",
         callerAvatar: String,
         calleeId: String,
-        calleeName: String = "Green SM Customer",
+        calleeName: String = "Callee",
         calleeAvatar: String,
         checkSum: String,
         metaData: [String: String],
         completion: @escaping (Result<Void, CallError>) -> Void
     ) {
         
-        let callerName = callerName == "" ? "Green SM Driver" : callerName
-        let calleeName = calleeName == "" ? "Green SM Customer" : calleeName
+        let callerName = callerName == "" ? "Caller" : callerName
+        let calleeName = calleeName == "" ? "Callee" : calleeName
         var merged = self.metaData.merging(metaData) { _, new in new }
         merged["call_name_title"] = calleeName
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -235,6 +235,7 @@ struct CallScreenWrapper: UIViewControllerRepresentable {
     var calleeName: String
     var callStatus: String
     var avatarUrl: String?
+    var isSipCall: Bool = false
     var metaData: [String: String]
 
     func makeUIViewController(context: Context) -> CallScreenViewController {
@@ -242,6 +243,7 @@ struct CallScreenWrapper: UIViewControllerRepresentable {
         vc.calleeName = calleeName
         vc.callStatus = callStatus
         vc.avatarUrl = avatarUrl
+        vc.isSipCall = isSipCall
         vc.metaData = metaData
         return vc
     }

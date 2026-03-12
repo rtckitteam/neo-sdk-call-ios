@@ -2,8 +2,8 @@
 
 
 Pod::Spec.new do |spec|
-  spec.name         = "CiCareSDKRTC"
-  spec.module_name  = "CiCareSDKRTC"
+  spec.name         = "SDKRTCKit"
+  spec.module_name  = "SDKRTCKit"
   spec.version      = "1.2.1-rc.4"
   spec.summary      = "SDK for calling app to app webrtc."
   spec.description  = <<-DESC
@@ -12,7 +12,7 @@ Pod::Spec.new do |spec|
   spec.homepage     = "https://github.com/cicareteam/cicare-sdk-rtc-ios"
   spec.license      = { :type => "Commercial", :file => "LICENSE" }
   spec.readme       = "https://raw.githubusercontent.com/cicareteam/cicare-sdk-rtc-ios/refs/heads/main/README.md"
-  spec.author       = { "C-icare Team" => "dev@c-icare.cc" }
+  spec.author       = { "RTCKit Team" => "dev@c-icare.cc" }
   spec.platform     = :ios, "12.0"
   spec.swift_version = ['5.9', '5.10']
 
@@ -20,8 +20,8 @@ Pod::Spec.new do |spec|
   spec.source       = { :git => "https://github.com/cicareteam/cicare-sdk-rtc-ios.git", :tag => spec.version.to_s }
 
   # Jika menggunakan source code
-  spec.source_files = "Sources/CicareSdkCall/**/*.{swift,h,m,xcassets}"
-  # spec.resources = ['Sources/CicareSdkCall/Media.xcassets']
+  spec.source_files = "Sources/RtcKitSdkCall/**/*.{swift,h,m,xcassets}"
+  # spec.resources = ['Sources/RtcKitSdkCall/Media.xcassets']
 
 
   # If use Framework binary

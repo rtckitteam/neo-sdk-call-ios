@@ -35,6 +35,8 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     private var isInCall: Bool = false
     private var defaultVolume: Float = 1.0
     
+    private var isSipCall: Bool = false
+    
     private override init() {
         super.init()
         setupCallKit()
@@ -136,10 +138,15 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
         }
     }
     
+    func sendDTMF(_ digit: String) {
+        
+    }
+    
     func outgoingCall(handle: String, calleeId: String, calleeName: String, calleeAvatar: String? = "", metaData: [String:String], callData: CallSessionRequest, completion: @escaping (Result<Void, CallError>) -> Void) {
         if (self.currentCall != nil) {
             return completion(.failure(CallError.alreadyIncall))
         }
+        self.isSipCall = false
         self.currentCall = UUID.init()
         requestMicrophonePermission { granted in
             if (granted) {
@@ -173,6 +180,86 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
                             
                             APIService.shared.request(
                                 path: "api/sdk-call/one2one",
+                                method: "POST",
+                                body: bodyData,
+                                headers: ["Content-Type": "application/json"],
+                                completion: { (result: Result<CallSession, APIError>) in
+                                    switch result {
+                                    case .success(let callSession):
+                                        if let wssUrl = URL(string: callSession.server) {
+                                            self.postCallStatus(.calling)
+                                            SocketSignaling.shared.connect(wssUrl: wssUrl, token: callSession.token, uuid: unwrappedCurrentCall) { status in
+                                                if status == .connected {
+                                                    SocketSignaling.shared.initCall()
+                                                }
+                                            }
+                                            completion(.success(()))
+                                        } else {
+                                            completion(.failure(CallError.internalServerError(code: 505, message: "Server not found")))
+                                            self.postNetworkStatus("server_not_found")
+                                        }
+                                        break
+                                    case .failure(let error):
+                                        switch error {
+                                        case .unauthorized:
+                                            completion(.failure(CallError.apiUnauthorized))
+                                            self.postNetworkStatus("call_failed_api")
+                                        case .badRequest(let data):
+                                            completion(.failure(CallError.internalServerError(code: data.code ?? 400, message: data.message)))
+                                            self.postNetworkStatus(data.message)
+                                        default:
+                                            completion(.failure(CallError.internalServerError(code: 500, message: error.localizedDescription)))
+                                            self.postNetworkStatus("call_failed_api")
+                                        }
+                                    }
+                                })
+                        }
+                    }
+                }
+            } else {
+                completion(.failure(CallError.microphonePermissionDenied))
+            }
+        }
+    }
+    
+    func outgoingCallSip(handle: String, destination: String, destinationName: String, destinationAvatar: String? = "", metaData: [String:String], callData: CallSipSessionRequest, completion: @escaping (Result<Void, CallError>) -> Void) {
+        if (self.currentCall != nil) {
+            return completion(.failure(CallError.alreadyIncall))
+        }
+        self.isSipCall = true
+        self.currentCall = UUID.init()
+        requestMicrophonePermission { granted in
+            if (granted) {
+                if let unwrappedCurrentCall = self.currentCall {
+                    self.calls[unwrappedCurrentCall] = CallInfo (
+                        callId: destination,
+                        hasVideo: false,
+                        callName: destinationName,
+                        callAvatar: destinationAvatar ?? "",
+                        callType: .OUTGOING,
+                        callStatus: .connecting
+                    )
+                    let cxHandle = CXHandle(type: CXHandle.HandleType.generic, value: handle)
+                    let action = CXStartCallAction.init(call: unwrappedCurrentCall, handle: cxHandle)
+                    action.isVideo = false
+                    let transaction = CXTransaction.init()
+                    transaction.addAction(action)
+                    self.requestTransaction(transaction: transaction) { success in
+                        if success {
+                            DispatchQueue.main.async {
+                                self.showCallScreen(uuid: unwrappedCurrentCall, callStatus: "connecting")
+                            }
+                            NotificationManager.shared.showOutgoingCallNotification(callee: handle)
+                            
+                            guard let bodyData = try? JSONEncoder().encode(callData) else {
+                                return
+                            }
+                            self.calls[unwrappedCurrentCall]?.callStatus = .connecting
+                            SocketSignaling.shared.setCallState(.connecting)
+                            self.postCallStatus(.connecting)
+                            
+                            APIService.shared.request(
+                                path: "api/sdk-call/app2phone",
                                 method: "POST",
                                 body: bodyData,
                                 headers: ["Content-Type": "application/json"],
@@ -537,7 +624,7 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
         do {
             if audioSession.category != .playAndRecord {
                 try audioSession.setCategory(AVAudioSession.Category.playAndRecord,
-                                             options: [.allowBluetooth, .allowBluetoothA2DP, .defaultToSpeaker])
+                                             options: [.allowBluetoothHFP, .allowBluetoothA2DP, .defaultToSpeaker])
             }
             if audioSession.mode != .voiceChat {
                 try audioSession.setMode(.voiceChat)
@@ -560,6 +647,7 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
                 calleeName: self.calls[uuid]!.callName,
                 callStatus: callStatus,
                 avatarUrl: self.calls[uuid]!.callAvatar,
+                isSipCall: self.isSipCall,
                 metaData: self.metaData
             ))
         } else {
@@ -567,6 +655,7 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
             screen.callStatus = callStatus
             screen.calleeName = self.calls[uuid]!.callName
             screen.avatarUrl = self.calls[uuid]!.callAvatar
+            screen.isSipCall = self.isSipCall
             screen.metaData = self.metaData
             vc = screen
         }
@@ -635,6 +724,13 @@ struct CallSessionRequest: Codable {
     let calleeName: String
     let calleeAvatar: String
     let checkSum: String
+}
+
+struct CallSipSessionRequest: Codable {
+    let callerId: String
+    let callerName: String
+    let callerAvatar: String
+    let destination: String
 }
 
 struct CallSession: Decodable {
