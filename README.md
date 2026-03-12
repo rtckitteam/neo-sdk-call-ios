@@ -13,7 +13,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 target 'YourAppTarget' do
   use_frameworks!
-  pod 'CiCareSDKRTC', '1.2.1-rc.2'
+  pod 'NeoSDKCall', '1.2.1-rc.5'
 end
 ````
 
@@ -81,7 +81,7 @@ import CicareSdkCall
 Before starting a call, configure the API:
 
 ```swift
-CicareSdkCall.shared.setAPI(baseUrl: "https://your-api-url.com", token: "your-api-token")
+  NeoSDKCall.shared.setAPI(baseUrl: "https://your-api-url.com", token: "your-api-token")
 ```
 
 ---
@@ -92,7 +92,7 @@ Use the following code to start an outgoing call:
 
 ```swift
 func makeCall() {
-    CicareSdkCall.shared.outgoing(
+      NeoSDKCall.shared.outgoing(
         callerId: "2",
         callerName: "Halis",
         callerAvatar: "https://avatar.iran.liara.run/public/boy",
@@ -112,7 +112,7 @@ func makeCall() {
 To display an incoming call, add the following code when handling the VoIP type APNs notification:
 
 ```swift
-CicareSdkCall.shared.incoming(
+  NeoSDKCall.shared.incoming(
     callerId: "2",
     callerName: "Halis",
     callerAvatar: "https://avatar.iran.liara.run/public/boy",
@@ -143,7 +143,7 @@ let meta: [String: String] = [
     "call_weak_signal": "Weak signal"
 ]
 
-CicareSdkCall.shared.outgoing(
+  NeoSDKCall.shared.outgoing(
     callerId: "2",
     callerName: "Halis",
     callerAvatar: "https://avatar.iran.liara.run/public/boy",
@@ -162,7 +162,7 @@ You can get call state event by doing this
 ```swift
 
 class CallEventDelegate: CallEventListener {
-    CicareSdkCall.shared.delegate = this
+      NeoSDKCall.shared.delegate = this
     
     public func onCallStateChanged(_ state: CallStatus) {
         print(state)
@@ -188,7 +188,7 @@ State list are:
 ## Outgoing call error result and code
 When you make an outgoign call there are error code result
 ```swift
-CicareSdkCall.shared.outgoing(...) { result in
+  NeoSDKCall.shared.outgoing(...) { result in
             switch result {
                 case .success:
                     print("Call success")
@@ -209,8 +209,8 @@ Error code list are:
 
 ## 🔗 References
 
-* CocoaPods: [https://cocoapods.org/pods/CiCareSDKRTC](https://cocoapods.org/pods/CiCareSDKRTC)
-* Latest version: **1.2.1-rc.2**
+* CocoaPods: [https://cocoapods.org/pods/CiCareSDKRTC](https://cocoapods.org/pods/NeoSDKCall)
+* Latest version: **1.2.1-rc.5**
 * Apple Docs:
 
   * [Push Notifications](https://developer.apple.com/documentation/usernotifications)
