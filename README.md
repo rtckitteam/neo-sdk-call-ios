@@ -1,6 +1,7 @@
 # NEO SDK Call iOS
 
 This SDK allows you to integrate **outgoing and incoming call features** into your iOS app using **NeoSdkCall SDK**.
+This SDK allows you to integrate **outgoing and incoming call features** into your iOS app using **NEO SDK**.
 
 ---
 
@@ -107,7 +108,27 @@ func makeCall() {
 
 ---
 
-### 3. Handle Incoming Calls
+### 3. Make an Outgoing Call SIP
+
+Use the following code to start an outgoing call:
+
+```swift
+func makeCall() {
+      NeoSDKCall.shared.outgoingSip(
+        callerId: "2",
+        callerName: "Halis",
+        callerAvatar: "https://avatar.iran.liara.run/public/boy",
+        destination: "3",
+        destinationName: "Anas",
+        destinationAvatar: "https://avatar.iran.liara.run/public",
+        metaData: ["call_title": "Free Call"]
+    )
+}
+```
+
+---
+
+### 4. Handle Incoming Calls
 
 To display an incoming call, add the following code when handling the VoIP type APNs notification:
 
