@@ -144,6 +144,11 @@ class DTMFKeypadView: UIView {
         displayLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 28, weight: .medium)
         displayLabel.textAlignment = .center
         displayLabel.text = ""
+        if #available(iOS 13.0, *) {
+            displayLabel.textColor = .black
+        } else {
+            displayLabel.textColor = .black
+        }
         displayLabel.translatesAutoresizingMaskIntoConstraints = false
 
         backspaceButton.setTitle("⌫", for: .normal)

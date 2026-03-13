@@ -1,6 +1,6 @@
-# CiCare SDK Call iOS
+# NEO SDK Call iOS
 
-This SDK allows you to integrate **outgoing and incoming call features** into your iOS app using **CiCare SDK**.
+This SDK allows you to integrate **outgoing and incoming call features** into your iOS app using **NeoSdkCall SDK**.
 
 ---
 
@@ -13,7 +13,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 target 'YourAppTarget' do
   use_frameworks!
-  pod 'NeoSDKCall', '1.2.1-rc.5'
+  pod 'NeoSDKCall', '1.2.1-rc.6'
 end
 ````
 
@@ -75,7 +75,7 @@ Add these keys for proper permission descriptions:
 Import module:
 
 ```swift
-import CicareSdkCall
+import NeoSdkCall
 ```
 
 Before starting a call, configure the API:
@@ -210,7 +210,7 @@ Error code list are:
 ## 🔗 References
 
 * CocoaPods: [https://cocoapods.org/pods/CiCareSDKRTC](https://cocoapods.org/pods/NeoSDKCall)
-* Latest version: **1.2.1-rc.5**
+* Latest version: **1.2.1-rc.6**
 * Apple Docs:
 
   * [Push Notifications](https://developer.apple.com/documentation/usernotifications)
@@ -221,7 +221,7 @@ Error code list are:
 
 ## 🛠 Notes
 
-* `CicareSdkCall` is a **singleton**, always use `CicareSdkCall.shared` instead of creating a new instance.
+* `NeoSdkCall` is a **singleton**, always use `NeoSdkCall.shared` instead of creating a new instance.
 * Ensure **APNs VoIP certificate** or **token authentication** is correctly set up.
 * Test notifications and calls on a **real device** (VoIP push is not supported in simulators).
 * Make sure to request microphone permission before initiating a call.
