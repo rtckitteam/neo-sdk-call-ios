@@ -22,11 +22,14 @@ public class CallScreenViewController: UIViewController {
     // MARK: - UI Elements
     private let nameLabel = UILabel()
     var statusLabel = UILabel()
+    private let durationLabel = UILabel()
     private var showKeypad = false
     private let avatarImageView = UIImageView()
     private let connectionLabel = UILabel()
     private var incomingButtonStack: UIStackView!
     private var connectedButtonStack: UIStackView!
+    private var callerInfoStack: UIStackView!
+    private var statusStack: UIStackView!
     
     private let keypadView = DTMFKeypadView()
     private var keypadButton: CircleIconButton!
@@ -152,11 +155,11 @@ public class CallScreenViewController: UIViewController {
     }
     
     @objc private func callProfileSet(_ notification: Notification) {
-        guard let nameString = notification.userInfo?["name"] as? String else { return }
-        guard let avatarString = notification.userInfo?["avatar"] as? String else { return }
+        let nameString = (notification.userInfo?["name"] as? String) ?? ""
+        let avatarString = (notification.userInfo?["avatar"] as? String) ?? ""
+        
         DispatchQueue.main.async {
-            
-            self.calleeName = nameString
+            self.calleeName = nameString.isEmpty ? "Call INA" : nameString
             
             if let callNameTitle = self.metaData["call_name_title"] {
                 if (!callNameTitle.isEmpty) {
@@ -166,21 +169,27 @@ public class CallScreenViewController: UIViewController {
             
             self.nameLabel.text = self.calleeName
         }
-        if let url = URL(string: avatarString) {
-            URLSession.shared.dataTask(with: url) { data, _, _ in
-                if let data = data {
-                    DispatchQueue.main.async {
-                        self.avatarImageView.image = UIImage(data: data)
+        
+        if !avatarString.isEmpty {
+            if avatarString.hasPrefix("http"), let url = URL(string: avatarString) {
+                URLSession.shared.dataTask(with: url) { data, _, _ in
+                    if let data = data {
+                        DispatchQueue.main.async {
+                            self.avatarImageView.image = UIImage(data: data)
+                        }
                     }
-                }
-            }.resume()
-        } else {
-            if #available(iOS 13.0, *) {
-                avatarImageView.image = UIImage(systemName: "person.fill")
+                }.resume()
             } else {
-                avatarImageView.image = UIImage(named: "avatar_default")
+                DispatchQueue.main.async {
+                    self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+                    self.avatarImageView.backgroundColor = .white
+                }
             }
-            avatarImageView.tintColor = .gray
+        } else {
+            DispatchQueue.main.async {
+                self.avatarImageView.image = UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+                self.avatarImageView.backgroundColor = .white
+            }
         }
     }
     
@@ -196,58 +205,68 @@ public class CallScreenViewController: UIViewController {
         DispatchQueue.main.async {
             switch status {
             case .incoming:
-                self.isConnected = true
-                self.statusLabel.text = self.metaData["call_incoming"]
+                self.isConnected = false
+                self.statusLabel.text = self.getLocalizedStatus("call_incoming")
                 //self.updateUIForIncomingCall()
             case .calling:
-                self.isConnected = true
-                self.statusLabel.text = self.metaData["call_calling"] ?? "Calling..."
+                self.isConnected = false
+                self.statusLabel.text = self.getLocalizedStatus("call_calling")
                 //self.updateUIForOutgoingCall()
             case .ongoing:
-                self.statusLabel.text = self.metaData["call_connected"] ?? "Connected"
+                self.isConnected = true
+                self.statusLabel.text = self.getLocalizedStatus("call_connected")
+                self.muteButton?.isEnabled = true
+                self.keypadButton?.isEnabled = true
+                self.startCallDurationTimer()
+                DispatchQueue.main.async {
+                    self.incomingButtonStack.isHidden = true
+                    self.connectedButtonStack.isHidden = false
+                }
             case .ended:
-                self.statusLabel.text = self.metaData["call_end"] ?? "Call End"
+                self.statusLabel.text = self.getLocalizedStatus("call_end")
                 self.endedCall(delay: 0.5)
             case .accepted:
-                self.statusLabel.text = self.metaData["call_accepted"] ?? "Call Accepted"
+                self.statusLabel.text = self.getLocalizedStatus("call_accepted")
             case .connected:
                 self.isConnected = true
-                self.statusLabel.text = self.metaData["call_connected"] ?? "Connected"
+                self.statusLabel.text = self.getLocalizedStatus("call_connected")
                 //NotificationManager.shared.showOngoingCallNotification(callee: self.calleeName)
-                self.muteButton.isEnabled = true
+                self.muteButton?.isEnabled = true
+                self.keypadButton?.isEnabled = true
                 self.startCallDurationTimer()
                 DispatchQueue.main.async {
                     self.incomingButtonStack.isHidden = true
                     self.connectedButtonStack.isHidden = false
                 }
             case .connecting:
-                self.isConnected = true
-                self.statusLabel.text = self.metaData["call_connecting"] ?? "Connecting"
+                self.isConnected = false
+                self.statusLabel.text = self.getLocalizedStatus("call_connecting")
+                self.muteButton?.isEnabled = false
+                self.keypadButton?.isEnabled = false
                 DispatchQueue.main.async {
                     self.incomingButtonStack.isHidden = true
                     self.connectedButtonStack.isHidden = false
                 }
-                /*if CallService.sharedInstance.answeredButNotReady {
-                    DispatchQueue.main.async {
-                        self.incomingButtonStack.isHidden = true
-                        self.connectedButtonStack.isHidden = false
-                    }
-                }*/
+            case .reconnecting:
+                self.isConnected = false
+                self.statusLabel.text = self.getLocalizedStatus("call_reconnecting")
+                self.muteButton?.isEnabled = false
+                self.keypadButton?.isEnabled = false
             case .ringing:
-                self.statusLabel.text = self.metaData["call_ringing"] ?? "Ringing"
+                self.statusLabel.text = self.getLocalizedStatus("call_ringing")
             case .answering:
-                self.statusLabel.text = self.metaData["call_answering"] ?? "Answering"
+                self.statusLabel.text = self.getLocalizedStatus("call_answering")
             case .busy:
-                self.statusLabel.text = self.metaData["call_busy"] ?? "Busy"
+                self.statusLabel.text = self.getLocalizedStatus("call_busy")
                 self.endedCall(delay: 1.5)
             case .refused:
-                self.statusLabel.text = self.metaData["call_refused"] ?? "Declined"
+                self.statusLabel.text = self.getLocalizedStatus("call_refused")
                 self.endedCall(delay: 1.5)
             case .timeout:
-                self.statusLabel.text = self.metaData["call_timeout"] ?? "No Answer"
+                self.statusLabel.text = self.getLocalizedStatus("call_timeout")
                 self.endedCall(delay: 1.5)
             case .cancel:
-                self.statusLabel.text = self.metaData["call_cancel"] ?? "Canceled"
+                self.statusLabel.text = self.getLocalizedStatus("call_cancel")
                 self.endedCall()
             default:
                 break;
@@ -257,11 +276,14 @@ public class CallScreenViewController: UIViewController {
     }
     
     @objc func toggleKeypad() {
-
-        guard isSipCall else { return }
+        // guard isSipCall else { return } // Dihapus agar keypad bisa tampil di call apa saja (App2App & App2Phone)
 
         keypadView.delegate = self
         keypadView.show(in: self.view)
+        UIView.animate(withDuration: 0.3) {
+            self.callerInfoStack.alpha = 0
+            self.statusStack.alpha = 0
+        }
     }
     
     private func showErrorConnectionAlert(text: String, icon: UIImage?) {
@@ -283,9 +305,11 @@ public class CallScreenViewController: UIViewController {
         self.isConnected = false
      //   self.pendingDismissed = true
         self.callDurationTimer?.invalidate()
-        self.muteButton.isEnabled = false
-        self.speakerButton.isEnabled = false
-        self.endButton.isEnabled = false
+        self.durationLabel.text = ""
+        self.muteButton?.isEnabled = false
+        self.keypadButton?.isEnabled = false
+        self.speakerButton?.isEnabled = false
+        self.endButton?.isEnabled = false
         //print("end call")
         //}
         //SocketManagerSignaling.shared.disconnect()
@@ -330,136 +354,185 @@ public class CallScreenViewController: UIViewController {
         ])
     }*/
     
+    private func getLocalizedStatus(_ key: String) -> String {
+        if let val = self.metaData[key], !val.isEmpty {
+            return val
+        }
+        switch key {
+        case "call_incoming": return "Incoming"
+        case "call_calling": return "Menghubungi..."
+        case "call_connected": return "Terhubung"
+        case "call_end": return "Panggilan Berakhir"
+        case "call_accepted": return "Call Accepted"
+        case "call_connecting": return "Menghubungi..."
+        case "call_reconnecting": return "Reconnecting..."
+        case "call_ringing": return "Ringing..."
+        case "call_answering": return "Answering"
+        case "call_busy": return "Busy"
+        case "call_refused": return "Declined"
+        case "call_timeout": return "No Answer"
+        case "call_cancel": return "Canceled"
+        default:
+            let cleanKey = key.replacingOccurrences(of: "call_", with: "")
+            return cleanKey.isEmpty ? "Calling" : cleanKey.capitalized
+        }
+    }
+    
     private func setupUI() {
         self.dismissed = false
         self.pendingDismissed = false
         self.isConnected = false
-        let titleLabel = UILabel()
-        titleLabel.text = metaData["call_title"] ?? "Call Free"
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 22)
-        titleLabel.textAlignment = .center
-        titleLabel.textColor = .black
         
-        let titleStack = UIStackView(arrangedSubviews: [titleLabel])
-        titleStack.axis = .vertical
-        titleStack.spacing = 10
-        titleStack.alignment = .center
-        titleStack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(titleStack)
-        
-        nameLabel.text = calleeName
-        nameLabel.font = UIFont.boldSystemFont(ofSize: 18)
-        nameLabel.textColor = .black
-        nameLabel.textAlignment = .center
-        
-        statusLabel.text = self.metaData["call_\(callStatus)"] ?? callStatus
-        statusLabel.font = UIFont.systemFont(ofSize: 16)
-        statusLabel.textColor = .black
+        statusLabel.text = getLocalizedStatus("call_\(callStatus)")
+        statusLabel.font = UIFont.systemFont(ofSize: 18)
+        statusLabel.textColor = .white
         statusLabel.textAlignment = .center
         
-        // Stack setup for labels
-        let statusStack = UIStackView(arrangedSubviews: [nameLabel, statusLabel])
+        statusStack = UIStackView(arrangedSubviews: [statusLabel])
         statusStack.axis = .vertical
-        statusStack.spacing = 8
         statusStack.alignment = .center
         statusStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusStack)
         
-        // Setup avatar
         avatarImageView.contentMode = .scaleAspectFill
         avatarImageView.layer.cornerRadius = 80
+        avatarImageView.layer.borderWidth = 2
+        avatarImageView.layer.borderColor = UIColor.white.cgColor
         avatarImageView.clipsToBounds = true
         avatarImageView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(avatarImageView)
         
-        if let callNameTitle = metaData["call_name_title"] {
-            if (!callNameTitle.isEmpty) {
-                calleeName = callNameTitle
-            }
+        if let callNameTitle = metaData["call_name_title"], !callNameTitle.isEmpty {
+            calleeName = callNameTitle
         }
+        
+        if calleeName.isEmpty {
+            calleeName = "Call INA"
+        }
+        
+        nameLabel.text = calleeName
+        nameLabel.font = UIFont.boldSystemFont(ofSize: 24)
+        nameLabel.textColor = .white
+        nameLabel.textAlignment = .center
+        
+        durationLabel.text = ""
+        durationLabel.font = UIFont.systemFont(ofSize: 18, weight: .regular)
+        durationLabel.textColor = .white
+        durationLabel.textAlignment = .center
+        durationLabel.translatesAutoresizingMaskIntoConstraints = false
         
         connectionLabel.text = ""
         connectionLabel.font = UIFont.systemFont(ofSize: 14)
-        connectionLabel.textColor = .red
+        connectionLabel.textColor = UIColor(red: 1.0, green: 0.7, blue: 0.7, alpha: 1.0)
         connectionLabel.textAlignment = .center
         
-        let nameLabelStack = UIStackView(arrangedSubviews: [connectionLabel])
-        nameLabelStack.axis = .vertical
-        nameLabelStack.spacing = 8
-        nameLabelStack.alignment = .center
-        nameLabelStack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(nameLabelStack)
-
-        // Load avatar from URL
-        if let avatarUrl = avatarUrl, let url = URL(string: avatarUrl) {
-            URLSession.shared.dataTask(with: url) { data, _, _ in
-                if let data = data {
-                    DispatchQueue.main.async {
-                        self.avatarImageView.image = UIImage(data: data)
-                    }
-                }
-            }.resume()
-        } else {
-            if #available(iOS 13.0, *) {
-                avatarImageView.image = UIImage(systemName: "person.fill")
-                avatarImageView.backgroundColor = .systemGray5
+        callerInfoStack = UIStackView(arrangedSubviews: [avatarImageView, nameLabel, durationLabel, connectionLabel])
+        callerInfoStack.axis = .vertical
+        callerInfoStack.spacing = 16
+        callerInfoStack.alignment = .center
+        callerInfoStack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(callerInfoStack)
+ 
+        if let avatarString = avatarUrl, !avatarString.isEmpty {
+            if avatarString.hasPrefix("http"), let url = URL(string: avatarString) {
+                URLSession.shared.dataTask(with: url) { data, _, _ in
+                    if let data = data { DispatchQueue.main.async { self.avatarImageView.image = UIImage(data: data) } }
+                }.resume()
             } else {
-                avatarImageView.image = AsssetKitImageProvider.Resources.avatarDefault.image
+                // Jika bukan URL http, anggap itu adalah nama gambar dari Assets lokal klien
+                self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+                self.avatarImageView.backgroundColor = .white
             }
-            avatarImageView.tintColor = .black
+        } else {
+            self.avatarImageView.image = UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+            self.avatarImageView.backgroundColor = .white
         }
 
-        // Stack setup for buttons
+        let infoCard = UIView()
+        infoCard.backgroundColor = UIColor(white: 1.0, alpha: 0.15)
+        infoCard.layer.cornerRadius = 16
+        infoCard.translatesAutoresizingMaskIntoConstraints = false
+        
+        let infoIcon = UIImageView(image: compatibleImage(named: "info.circle", systemName: "info.circle"))
+        infoIcon.tintColor = .white
+        infoIcon.translatesAutoresizingMaskIntoConstraints = false
+        
+        let infoText = UILabel()
+        infoText.text = "Pastikan perangkat kamu terhubung dengan jaringan internet yang stabil untuk melakukan panggilan ini"
+        infoText.textColor = .white
+        infoText.font = UIFont.systemFont(ofSize: 12)
+        infoText.numberOfLines = 0
+        infoText.translatesAutoresizingMaskIntoConstraints = false
+        
+        infoCard.addSubview(infoIcon)
+        infoCard.addSubview(infoText)
+        view.addSubview(infoCard)
+        
         incomingButtonStack = UIStackView(arrangedSubviews: incomingbuttons())
         incomingButtonStack.axis = .vertical
-        incomingButtonStack.spacing = 50
+        incomingButtonStack.spacing = 30
         incomingButtonStack.alignment = .center
         incomingButtonStack.translatesAutoresizingMaskIntoConstraints = false
-        incomingButtonStack.isUserInteractionEnabled = true
         view.addSubview(incomingButtonStack)
         
         connectedButtonStack = UIStackView(arrangedSubviews: connectedButtons())
         connectedButtonStack.axis = .vertical
-        connectedButtonStack.spacing = 50
+        connectedButtonStack.spacing = 30
         connectedButtonStack.alignment = .center
         connectedButtonStack.translatesAutoresizingMaskIntoConstraints = false
-        connectedButtonStack.isUserInteractionEnabled = true
         view.addSubview(connectedButtonStack)
 
         NSLayoutConstraint.activate([
-            // labelStack at top
-            titleStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            titleStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
+            statusStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
             statusStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            statusStack.bottomAnchor.constraint(equalTo: avatarImageView.topAnchor, constant: -20),
             
-            // avatar in center
-            avatarImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            avatarImageView.bottomAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
             avatarImageView.widthAnchor.constraint(equalToConstant: 160),
             avatarImageView.heightAnchor.constraint(equalToConstant: 160),
             
-            nameLabelStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            nameLabelStack.topAnchor.constraint(equalTo: avatarImageView.bottomAnchor, constant: 30),
-                        
+            callerInfoStack.topAnchor.constraint(equalTo: statusStack.bottomAnchor, constant: 40),
+            callerInfoStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            callerInfoStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26),
+            callerInfoStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -26),
+            
+            infoCard.bottomAnchor.constraint(equalTo: incomingButtonStack.topAnchor, constant: -30),
+            infoCard.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26),
+            infoCard.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -26),
+            
+            infoIcon.leadingAnchor.constraint(equalTo: infoCard.leadingAnchor, constant: 16),
+            infoIcon.topAnchor.constraint(equalTo: infoCard.topAnchor, constant: 16),
+            infoIcon.widthAnchor.constraint(equalToConstant: 20),
+            infoIcon.heightAnchor.constraint(equalToConstant: 20),
+            
+            infoText.leadingAnchor.constraint(equalTo: infoIcon.trailingAnchor, constant: 12),
+            infoText.trailingAnchor.constraint(equalTo: infoCard.trailingAnchor, constant: -16),
+            infoText.topAnchor.constraint(equalTo: infoCard.topAnchor, constant: 16),
+            infoText.bottomAnchor.constraint(equalTo: infoCard.bottomAnchor, constant: -16),
+            
             incomingButtonStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             incomingButtonStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            incomingButtonStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-            incomingButtonStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+            incomingButtonStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            incomingButtonStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
             connectedButtonStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             connectedButtonStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            connectedButtonStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-            connectedButtonStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20)
+            connectedButtonStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            connectedButtonStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
         
         if (callStatus == "incoming")  {
             incomingButtonStack.isHidden = false
             connectedButtonStack.isHidden = true
+            self.isConnected = false
         } else {
             incomingButtonStack.isHidden = true
             connectedButtonStack.isHidden = false
+            if callStatus == "connected" || callStatus == "ongoing" {
+                self.isConnected = true
+                self.muteButton?.isEnabled = true
+                self.keypadButton?.isEnabled = true
+                self.startCallDurationTimer()
+            } else {
+                self.isConnected = false
+            }
         }
     }
     
@@ -482,45 +555,40 @@ public class CallScreenViewController: UIViewController {
         secondsElapsed += 1
         let minutes = secondsElapsed / 60
         let seconds = secondsElapsed % 60
-        self.statusLabel.text = String(format: "%02d:%02d", minutes, seconds)
+        self.durationLabel.text = String(format: "%02d:%02d", minutes, seconds)
     }
     
     private func incomingbuttons()-> [UIView]{
-        // Initialize the buttons and add actions via closures
         muteButton = CircleIconButton(
             icon: compatibleImage(named: "mic.slash", systemName: "mic.slash"),
             labelText: self.metaData["call_btn_mute"] ?? "Mute",
-            iconColor: UIColor(hex: "17666A")!,
-            backgroundColor: UIColor(hex: "E9F8F9")!
+            iconColor: .white,
+            backgroundColor: UIColor(white: 1.0, alpha: 0.2)
         ) {
             if (SocketSignaling.shared.muteCall(!self.isMuted)) {
-                print("view mute success")
                 self.isMuted.toggle()
             }
             self.muteButton.icon = self.isMuted ? self.compatibleImage(named: "mic.slash", systemName: "mic.slash.fill") : self.compatibleImage(named: "mic.slash", systemName: "mic.slash")
-            self.muteButton.button.tintColor = self.isMuted ? .white : UIColor(hex: "17666A")!
-            self.muteButton.button.backgroundColor = self.isMuted ? UIColor(hex: "00BABD")! : UIColor(hex: "E9F8F9")!
-            
+            self.muteButton.button.tintColor = .white
+            self.muteButton.button.backgroundColor = self.isMuted ? .systemRed : UIColor(white: 1.0, alpha: 0.2)
         }
-        muteButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        muteButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
         muteButton.isEnabled = false
         
         speakerButton = CircleIconButton(
             icon: compatibleImage(named: "speaker", systemName: "speaker.wave.2"),
             labelText: self.metaData["call_btn_speaker"] ?? "Speaker",
-            iconColor: UIColor(hex: "17666A")!,
-            backgroundColor: UIColor(hex: "E9F8F9")!
+            iconColor: .white,
+            backgroundColor: UIColor(white: 1.0, alpha: 0.2)
         ) {
             self.isSpeakerOn.toggle()
             self.speakerButton.icon = self.isSpeakerOn ? self.compatibleImage(named: "speaker", systemName: "speaker.wave.2.fill") : self.compatibleImage(named: "speaker", systemName: "speaker.wave.2")
-            self.speakerButton.button.tintColor = self.isSpeakerOn ? .white : UIColor(hex: "17666A")!
-            self.speakerButton.button.backgroundColor =  self.isSpeakerOn ? UIColor(hex: "00BABD")! : UIColor(hex: "E9F8F9")!
+            self.speakerButton.button.tintColor = .white
+            self.speakerButton.button.backgroundColor =  self.isSpeakerOn ? .systemRed : UIColor(white: 1.0, alpha: 0.2)
             let session = AVAudioSession.sharedInstance()
             do {
-                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP])
+                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
                 try session.setActive(true)
-                
-                // Toggle the audio route to speaker or default (e.g., earphone)
                 if self.isSpeakerOn {
                     try session.overrideOutputAudioPort(.speaker)
                 } else {
@@ -530,44 +598,36 @@ public class CallScreenViewController: UIViewController {
                 print("Failed to set audio session: \(error)")
             }
         }
-        speakerButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        speakerButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
         
-        let audioButtonStack = UIStackView(arrangedSubviews: [speakerButton, muteButton/*, messageButton*/])
+        let audioButtonStack = UIStackView(arrangedSubviews: [speakerButton, muteButton])
         audioButtonStack.axis = .horizontal
-        audioButtonStack.spacing = 150
-        audioButtonStack.distribution = .fillEqually
+        audioButtonStack.spacing = 80
+        audioButtonStack.distribution = .equalCentering
         audioButtonStack.alignment = .center
         audioButtonStack.translatesAutoresizingMaskIntoConstraints = false
         audioButtonStack.isUserInteractionEnabled = true
         
         let endCallButton = CircleIconButton(
-            icon: compatibleImage(named: "xmark", systemName: "xmark"),
-            labelText: "",
+            icon: compatibleImage(named: "phone.down.fill", systemName: "phone.down.fill"),
+            labelText: self.metaData["call_end"] ?? "Akhiri Panggilan",
             iconColor: .white,
-            backgroundColor: .red
+            backgroundColor: .systemRed
         ) {
-            //if CallState.shared.currentCallUUID != nil {
-            //CallService.sharedInstance.declineCall()
-            //} else {
-            //    self.endedCall()
-            //}
         }
-        endCallButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        endCallButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
         let answerCallButton = CircleIconButton(
             icon: compatibleImage(named: "phone.fill", systemName: "phone.fill"),
-            labelText: "",
+            labelText: self.metaData["answer"] ?? "Terima",
             iconColor: .white,
-            backgroundColor: .green
+            backgroundColor: .systemGreen
         ) {
-            //if let uuid = CallState.shared.currentCallUUID {
-            //CallService.sharedInstance.answerCall()
-            //}
         }
-        answerCallButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        answerCallButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
         let actionButtonStack = UIStackView(arrangedSubviews: [endCallButton, answerCallButton])
         actionButtonStack.axis = .horizontal
-        actionButtonStack.spacing = 150
-        actionButtonStack.distribution = .fillEqually
+        actionButtonStack.spacing = 80
+        actionButtonStack.distribution = .equalCentering
         actionButtonStack.alignment = .fill
         actionButtonStack.translatesAutoresizingMaskIntoConstraints = false
         actionButtonStack.isUserInteractionEnabled = true
@@ -575,51 +635,47 @@ public class CallScreenViewController: UIViewController {
     }
     
     private func connectedButtons()-> [UIView]{
-        // Initialize the buttons and add actions via closures
         muteButton = CircleIconButton(
             icon: compatibleImage(named: "mic.slash", systemName: "mic.slash"),
             labelText: self.metaData["call_btn_mute"] ?? "Mute",
-            iconColor: UIColor(hex: "17666A")!,
-            backgroundColor: UIColor(hex: "E9F8F9")!
+            iconColor: .white,
+            backgroundColor: UIColor(white: 1.0, alpha: 0.2)
         ) {
             if (SocketSignaling.shared.muteCall(!self.isMuted)) {
-                print("view mute success")
                 self.isMuted.toggle()
             }
             self.muteButton.icon = self.isMuted ? self.compatibleImage(named: "mic.slash", systemName: "mic.slash.fill") : self.compatibleImage(named: "mic.slash", systemName: "mic.slash")
-            self.muteButton.button.tintColor = self.isMuted ? .white : UIColor(hex: "17666A")!
-            self.muteButton.button.backgroundColor = self.isMuted ? UIColor(hex: "00BABD")! : UIColor(hex: "E9F8F9")!
+            self.muteButton.button.tintColor = .white
+            self.muteButton.button.backgroundColor = self.isMuted ? .systemRed : UIColor(white: 1.0, alpha: 0.2)
         }
-        muteButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        muteButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
         muteButton.isEnabled = false
         
         keypadButton = CircleIconButton(
-            icon: compatibleImage(named: "keypad", systemName: "circle.grid.3x3"),
-            labelText: self.metaData["call_btn_keypad"] ?? "Keypad",
-            iconColor: UIColor(hex: "17666A")!,
-            backgroundColor: UIColor(hex: "E9F8F9")!
+            icon: compatibleImage(named: "keypad", systemName: "circle.grid.3x3.fill"),
+            labelText: self.metaData["call_numpad"] ?? "Keypad",
+            iconColor: .white,
+            backgroundColor: UIColor(white: 1.0, alpha: 0.2)
         ) { [weak self] in
             self?.toggleKeypad()
         }
-        
-        keypadButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        keypadButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
+        keypadButton.isEnabled = false
         
         speakerButton = CircleIconButton(
             icon: compatibleImage(named: "speaker", systemName: "speaker.wave.2"),
             labelText: self.metaData["call_btn_speaker"] ?? "Speaker",
-            iconColor: UIColor(hex: "17666A")!,
-            backgroundColor: UIColor(hex: "E9F8F9")!
+            iconColor: .white,
+            backgroundColor: UIColor(white: 1.0, alpha: 0.2)
         ) {
             self.isSpeakerOn.toggle()
             self.speakerButton.icon = self.isSpeakerOn ? self.compatibleImage(named: "speaker", systemName: "speaker.wave.2.fill") : self.compatibleImage(named: "speaker", systemName: "speaker.wave.2")
-            self.speakerButton.button.tintColor = self.isSpeakerOn ? .white : UIColor(hex: "17666A")!
-            self.speakerButton.button.backgroundColor =  self.isSpeakerOn ? UIColor(hex: "00BABD")! : UIColor(hex: "E9F8F9")!
+            self.speakerButton.button.tintColor = .white
+            self.speakerButton.button.backgroundColor =  self.isSpeakerOn ? .systemRed : UIColor(white: 1.0, alpha: 0.2)
             let session = AVAudioSession.sharedInstance()
             do {
-                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP])
+                try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
                 try session.setActive(true)
-                
-                // Toggle the audio route to speaker or default (e.g., earphone)
                 if self.isSpeakerOn {
                     try session.overrideOutputAudioPort(.speaker)
                 } else {
@@ -629,34 +685,32 @@ public class CallScreenViewController: UIViewController {
                 print("Failed to set audio session: \(error)")
             }
         }
-        speakerButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
-        let audioButtonStack: UIStackView!
-        if (isSipCall) {
-            audioButtonStack = UIStackView(arrangedSubviews: [speakerButton, keypadButton, muteButton])
-            audioButtonStack.axis = .horizontal
-            audioButtonStack.spacing = 50
-        } else {
-            audioButtonStack = UIStackView(arrangedSubviews: [speakerButton, keypadButton, muteButton])
-            audioButtonStack.axis = .horizontal
-            audioButtonStack.spacing = 150
-        }
-        audioButtonStack.distribution = .fillEqually
+        speakerButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
+        
+        let audioButtonStack = UIStackView(arrangedSubviews: [keypadButton, speakerButton, muteButton])
+        audioButtonStack.axis = .horizontal
+        audioButtonStack.distribution = .equalCentering
         audioButtonStack.alignment = .center
         audioButtonStack.translatesAutoresizingMaskIntoConstraints = false
         audioButtonStack.isUserInteractionEnabled = true
+        audioButtonStack.widthAnchor.constraint(equalToConstant: UIScreen.main.bounds.width - 80).isActive = true
         
         endButton = CircleIconButton(
-            icon: compatibleImage(named: "xmark", systemName: "xmark"),
-            labelText: "",
+            icon: compatibleImage(named: "phone.down.fill", systemName: "phone.down.fill"),
+            labelText: self.metaData["call_end"] ?? "Akhiri Panggilan",
             iconColor: .white,
-            backgroundColor: .red
+            backgroundColor: .systemRed
         ) {
             CallManager.sharedInstance.endActiveCall()
-            // Handle end call action here
         }
-        endButton.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        endButton.widthAnchor.constraint(equalToConstant: 74).isActive = true
         
-        return [audioButtonStack, endButton]
+        let endButtonStack = UIStackView(arrangedSubviews: [endButton])
+        endButtonStack.axis = .horizontal
+        endButtonStack.alignment = .center
+        endButtonStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        return [audioButtonStack, endButtonStack]
     }
     
 }
@@ -668,7 +722,10 @@ extension CallScreenViewController: DTMFKeypadDelegate {
     }
     
     func keypadDidClose() {
-        
+        UIView.animate(withDuration: 0.3) {
+            self.callerInfoStack.alpha = 1
+            self.statusStack.alpha = 1
+        }
     }
 
 }
@@ -704,3 +761,4 @@ extension UIColor {
     )
   }
 }
+	

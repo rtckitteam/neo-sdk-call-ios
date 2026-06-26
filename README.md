@@ -14,7 +14,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 target 'YourAppTarget' do
   use_frameworks!
-  pod 'NeoSDKCall', '1.2.1-rc.6'
+  pod 'NeoSDKCall', '1.2.1-rc.7'
 end
 ````
 
@@ -231,7 +231,7 @@ Error code list are:
 ## 🔗 References
 
 * CocoaPods: [https://cocoapods.org/pods/CiCareSDKRTC](https://cocoapods.org/pods/NeoSDKCall)
-* Latest version: **1.2.1-rc.6**
+* Latest version: **1.2.1-rc.7**
 * Apple Docs:
 
   * [Push Notifications](https://developer.apple.com/documentation/usernotifications)

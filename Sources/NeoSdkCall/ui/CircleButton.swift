@@ -32,7 +32,7 @@ public class CircleIconButton: UIView {
 
         label.text = text
         label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = .black
+        label.textColor = .white
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
 
@@ -80,3 +80,4 @@ public class CircleIconButton: UIView {
         fatalError("init(coder:) not implemented")
     }
 }
+

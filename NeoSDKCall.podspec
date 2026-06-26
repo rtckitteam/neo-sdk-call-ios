@@ -4,7 +4,7 @@
 Pod::Spec.new do |spec|
   spec.name         = "NeoSDKCall"
   spec.module_name  = "NeoSDKCall"
-  spec.version      = "1.2.1-rc.6"
+  spec.version      = "1.2.1-rc.7"
   spec.summary      = "SDK for calling app to app webrtc."
   spec.description  = <<-DESC
     CiCareSDKRTC is a SDK for calling app to app or app to phone via webrtc.
