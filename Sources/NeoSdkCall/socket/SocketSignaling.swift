@@ -39,6 +39,11 @@ class SocketSignaling: NSObject {
     
     private var isCallConnected = false
     private var isReconnecting = false
+    private var isClosed = false
+    private var reconnectCount = 0
+    private let maxReconnect = 3
+    private var isCallTerminated = false
+    private var isShowingWeakConnection = false
     
 
     override init() {
@@ -88,7 +93,8 @@ class SocketSignaling: NSObject {
                     completion(status)
                 }
         }
-        socket?.on(clientEvent: .connect) { _, _ in
+        socket?.on(clientEvent: .connect) { [weak self] _, _ in
+            guard let self = self else { return }
             if let start = self.connectStartTime {
                 let elapsed = Date().timeIntervalSince(start)
                 if elapsed > 1.5 {
@@ -97,6 +103,7 @@ class SocketSignaling: NSObject {
                     NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "connected"])
                 }
             }
+            self.reconnectCount = 0
             self.isConnected = true
             if (self.isReconnecting) {
                 print("socket reconnected")
@@ -111,7 +118,9 @@ class SocketSignaling: NSObject {
             self.startPingMonitoring()
             completion(.connected)
         }
-        socket?.on(clientEvent: .disconnect) { _, _ in
+//        socket?.on(clientEvent: .disconnect) { _, _ in
+        socket?.on(clientEvent: .disconnect) { [weak self] _, _ in
+            guard let self = self else { return }
             self.isConnected = false
             self.manager = nil
             self.socket = nil
@@ -119,10 +128,36 @@ class SocketSignaling: NSObject {
             self.close()
             print("socket disconnected")
         }
-        socket?.on(clientEvent: .reconnect) { _, _ in
-            //self.initOffer()
+//        socket?.on(clientEvent: .reconnect) { _, _ in
+//            //self.initOffer()
+//            print("socket reconnecting")
+//            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "reconnecting"])
+//            self.isReconnecting = true
+//        }
+        socket?.on(clientEvent: .reconnectAttempt) { [weak self] _, _ in
+            guard let self = self else { return }
+            if self.isCallTerminated { return }
+
+            self.reconnectCount += 1
+            print("reconnect attempt: \(self.reconnectCount)")
+
+            if self.reconnectCount >= self.maxReconnect {
+                self.forceTerminateCall()
+            }
+        }
+        
+        socket?.on(clientEvent: .reconnect) { [weak self] _, _ in
+            guard let self = self else { return }
+            if self.isCallTerminated { return }
+
             print("socket reconnecting")
-            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "reconnecting"])
+
+            NotificationCenter.default.post(
+                name: .callNetworkChanged,
+                object: nil,
+                userInfo: ["signalStrength": "reconnecting"]
+            )
+
             self.isReconnecting = true
         }
         socket?.on(clientEvent: .error) { _, _ in
@@ -365,23 +400,79 @@ class SocketSignaling: NSObject {
         }
     }
     
+//    func close() {
+//        guard isConnected else { return }
+//        isConnected = false
+//        isReconnecting = false
+//        CallManager.sharedInstance.endCall(uuid: self.uuid!)
+//        socket?.disconnect()
+//        socket?.removeAllHandlers()
+//        timer?.invalidate()
+//        timer = nil
+//        socket = nil
+//        
+//    }
     func close() {
-        guard isConnected else { return }
+        if isClosed { return }
+        isClosed = true
+
         isConnected = false
         isReconnecting = false
+
         CallManager.sharedInstance.endCall(uuid: self.uuid!)
+
         socket?.disconnect()
         socket?.removeAllHandlers()
+
         timer?.invalidate()
         timer = nil
+
         socket = nil
-        
+        manager = nil
+    }
+    
+    private func forceTerminateCall() {
+        if isCallTerminated { return }
+
+        print("FORCE TERMINATE CALL")
+
+        self.callState = .ended
+
+        CallManager.sharedInstance.endedCall(uuid: self.uuid!, callState: .ended)
+
+        self.send(event: "CLEARING_SESSION", data: [:])
+
+        self.releaseWebrtc()
+
+        socket?.disconnect()
+        socket?.removeAllHandlers()
+
+        timer?.invalidate()
+        timer = nil
+        reconnectCount = 0
+            isReconnecting = false
+
+
+        socket = nil
+        manager = nil
+        isConnected = false
+    }
+    private func handleFailure() {
+        reconnectCount += 1
+
+        if reconnectCount >= maxReconnect {
+            print("CALL DEAD")
+            forceTerminateCall()
+        } else {
+            print("TRY RECONNECT...")
+        }
     }
     
     deinit {
         close()
     }
 }
+
 
 extension SocketSignaling: WebRTCEventCallback {
     func onLocalSdpCreated(sdp: RTCSessionDescription) {
@@ -397,16 +488,45 @@ extension SocketSignaling: WebRTCEventCallback {
         // optional: map state to callEventListener if needed
     }
     func onIceConnectionStateChanged(state: RTCIceConnectionState) {
-        
+        if isCallTerminated { return }
         switch state {
+//        case .disconnected:
+//            print("ice state disconnected")
+//            
+////            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "reconnecting"])
+//            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "weak"])
+//            
+//            break
+//        case .failed:
+//            print("ice state failed")
+//            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "reconnecting"])
+//            break
         case .disconnected:
             print("ice state disconnected")
-            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "reconnecting"])
-            break
+
+            NotificationCenter.default.post(
+                name: .callNetworkChanged,
+                object: nil,
+                userInfo: ["signalStrength": "weak"]
+            )
+
+            // kasih delay sebelum reconnect
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                guard let self = self else { return }
+                if self.isCallTerminated { return }
+
+                NotificationCenter.default.post(
+                    name: .callNetworkChanged,
+                    object: nil,
+                    userInfo: ["signalStrength": "reconnecting"]
+                )
+            }
         case .failed:
             print("ice state failed")
+
             NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "reconnecting"])
-            break
+
+            self.handleFailure()
         case .closed:
             print("ice state closed")
             NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "lost"])

@@ -25,6 +25,7 @@ public enum AsssetKitImageProvider {
   public enum Resources {
     public static let avatarDefault = ImageAsset(name: "avatar_default")
     public static let errorIcon = ImageAsset(name: "error_icon")
+    public static let neocall = ImageAsset(name: "neocall")
   }
 }
 // swiftlint:enable identifier_name line_length nesting type_body_length type_name
@@ -54,12 +55,6 @@ public struct ImageAsset {
     if let result = image {
       return result
     } else {
-      // ✅ Aman: Tidak fatalError, hanya log warning
-      #if DEBUG
-      print("⚠️ Warning: Unable to load image asset named \(name)")
-      #endif
-
-      // Kembalikan image kosong agar UI tetap jalan
       #if os(iOS) || os(tvOS) || os(watchOS)
       return Image()
       #elseif os(macOS)
@@ -126,17 +121,35 @@ public extension SwiftUI.Image {
 // swiftlint:disable convenience_type
 private final class BundleToken {
   static let bundle: Bundle = {
-    // Framework bundle tempat class ini berada
+    #if SWIFT_PACKAGE
+    return Bundle.module
+    #else
     let frameworkBundle = Bundle(for: BundleToken.self)
-
-    // Cari resource bundle di dalam framework
-    if let url = frameworkBundle.url(forResource: "CiCareSDKCall", withExtension: "bundle"),
-       let resourceBundle = Bundle(url: url) {
-      return resourceBundle
+    let candidates = ["NeoSdkCall_NeoSdkCall", "NeoSDKCall", "NeoSdkCall", "CiCareSDKCall", "RtcKitSdkCall"]
+   
+    if let subpaths = try? FileManager.default.contentsOfDirectory(atPath: Bundle.main.bundlePath) {
+        let bundles = subpaths.filter { $0.hasSuffix(".bundle") }
+       
+    }
+    if let subpaths = try? FileManager.default.contentsOfDirectory(atPath: frameworkBundle.bundlePath) {
+        let bundles = subpaths.filter { $0.hasSuffix(".bundle") }
+       
     }
 
-    // fallback
+    for candidate in candidates {
+        if let url = frameworkBundle.url(forResource: candidate, withExtension: "bundle"),
+           let resourceBundle = Bundle(url: url) {
+          
+            return resourceBundle
+        }
+        if let url = Bundle.main.url(forResource: candidate, withExtension: "bundle"),
+           let resourceBundle = Bundle(url: url) {
+            print("[DEBUG BUNDLE] Found bundle \(candidate) in Bundle.main")
+            return resourceBundle
+        }
+    }
     return frameworkBundle
+    #endif
   }()
 }
 // swiftlint:enable convenience_type

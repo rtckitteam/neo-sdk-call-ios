@@ -40,6 +40,7 @@ public class CallScreenViewController: UIViewController {
     private var isMuted: Bool = false
     private var isSpeakerOn: Bool = false
     private var isConnected: Bool = false
+    private var isConnectionLost: Bool = false
     
     private var onMessageClicked: (() -> Void)?
     
@@ -83,27 +84,32 @@ public class CallScreenViewController: UIViewController {
         monitor.pathUpdateHandler = { path in
             // Reset timer setiap ada perubahan path
             self.checkTimer?.cancel()
-
+            
             if path.status == .unsatisfied {
                 // Delay 3 detik untuk memastikan benar-benar tidak ada koneksi
-                let task = DispatchWorkItem {
-                    if self.monitor.currentPath.status == .unsatisfied {
-                        DispatchQueue.main.async {
-                            if !self.isNetworkReallyDown {
-                                self.isNetworkReallyDown = true
-                                self.showErrorConnectionAlert(
-                                    text: self.metaData["call_failed_no_connection"] ?? "No internet connection",
-                                    icon: nil
-                                )
+                if !self.isConnected {
+                    
+                    
+                    let task = DispatchWorkItem {
+                        if self.monitor.currentPath.status == .unsatisfied {
+                            DispatchQueue.main.async {
+                                if !self.isNetworkReallyDown {
+                                    self.isNetworkReallyDown = true
+                                    self.showErrorConnectionAlert(
+                                        text: self.metaData["call_failed_no_connection"] ?? "No internet connection",
+                                        icon: nil
+                                    )
+                                }
                             }
                         }
                     }
+                    
+                    self.checkTimer = task
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 3, execute: task)
+                } else {
+                    // Kalau koneksi balik lagi
+                    self.isNetworkReallyDown = false
                 }
-                self.checkTimer = task
-                DispatchQueue.global().asyncAfter(deadline: .now() + 3, execute: task)
-            } else {
-                // Kalau koneksi balik lagi
-                self.isNetworkReallyDown = false
             }
         }
         monitor.start(queue: queue)
@@ -137,16 +143,21 @@ public class CallScreenViewController: UIViewController {
             if (self.isConnected) {
                 switch value {
                 case "weak":
-                    self.connectionLabel.text = "\(self.metaData["call_weak_signal"] ?? "Weak signal")..."
+                    self.connectionLabel.text = "\(self.metaData["call_weak_signal"] ?? "Koneksi Tidak Stabil")"
                     self.connectionLabel.textColor = .systemRed
+                    self.isConnectionLost = false
                 case "lost":
-                    self.connectionLabel.text = "\(self.metaData["call_lost_connection"] ?? "Lost connection")..."
+                    self.connectionLabel.text = "\(self.metaData["call_lost_connection"] ?? "Koneksi Terputus")"
                     self.connectionLabel.textColor = .systemRed
+                    self.isConnectionLost = true
                 case "reconnecting":
                     self.connectionLabel.text = "\(self.metaData["call_reconnecting"] ?? "Reconnecting")..."
                     self.connectionLabel.textColor = .systemRed
+                    self.isConnectionLost = true
                 default:
                     self.connectionLabel.text = ""
+                    self.isConnectionLost = false
+
                 }
             } else if (notification.userInfo?["error"] != nil) {
                 self.showErrorConnectionAlert(text: self.metaData[value] ?? value, icon: AsssetKitImageProvider.Resources.errorIcon.image)
@@ -181,13 +192,13 @@ public class CallScreenViewController: UIViewController {
                 }.resume()
             } else {
                 DispatchQueue.main.async {
-                    self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+                    self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "vector") ?? ImageAsset(name: "vector").image
                     self.avatarImageView.backgroundColor = .white
                 }
             }
         } else {
             DispatchQueue.main.async {
-                self.avatarImageView.image = UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+                self.avatarImageView.image = UIImage(named: "vector") ?? ImageAsset(name: "vector").image
                 self.avatarImageView.backgroundColor = .white
             }
         }
@@ -223,8 +234,16 @@ public class CallScreenViewController: UIViewController {
                     self.connectedButtonStack.isHidden = false
                 }
             case .ended:
-                self.statusLabel.text = self.getLocalizedStatus("call_end")
-                self.endedCall(delay: 0.5)
+                if self.isConnectionLost {
+                    self.statusLabel.text = self.getLocalizedStatus("call_connection_lost")
+                    self.statusLabel.text = "Panggilan Terputus"
+                    self.endedCall(
+                        delay: 0.3
+                    )
+                }else {
+                    self.statusLabel.text = self.getLocalizedStatus("call_end")
+                    self.endedCall(delay: 0.5)
+                }
             case .accepted:
                 self.statusLabel.text = self.getLocalizedStatus("call_accepted")
             case .connected:
@@ -363,8 +382,9 @@ public class CallScreenViewController: UIViewController {
         case "call_calling": return "Menghubungi..."
         case "call_connected": return "Terhubung"
         case "call_end": return "Panggilan Berakhir"
+        case "call_lost_connection": return "Panggilan Terputus"
         case "call_accepted": return "Call Accepted"
-        case "call_connecting": return "Menghubungi..."
+        case "call_connecting": return "Menghubungkan"
         case "call_reconnecting": return "Reconnecting..."
         case "call_ringing": return "Ringing..."
         case "call_answering": return "Answering"
@@ -382,6 +402,7 @@ public class CallScreenViewController: UIViewController {
         self.dismissed = false
         self.pendingDismissed = false
         self.isConnected = false
+        self.isConnectionLost = false
         
         statusLabel.text = getLocalizedStatus("call_\(callStatus)")
         statusLabel.font = UIFont.systemFont(ofSize: 18)
@@ -439,11 +460,11 @@ public class CallScreenViewController: UIViewController {
                 }.resume()
             } else {
                 // Jika bukan URL http, anggap itu adalah nama gambar dari Assets lokal klien
-                self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+                self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "vector") ?? ImageAsset(name: "vector").image
                 self.avatarImageView.backgroundColor = .white
             }
         } else {
-            self.avatarImageView.image = UIImage(named: "neocall") ?? ImageAsset(name: "neocall").image
+            self.avatarImageView.image = UIImage(named: "vector") ?? ImageAsset(name: "vector").image
             self.avatarImageView.backgroundColor = .white
         }
 

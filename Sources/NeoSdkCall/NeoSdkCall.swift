@@ -200,14 +200,20 @@ public class NeoSdkCall: CallEventListener {
         var merged = self.metaData.merging(metaData) { _, new in new }
         merged["call_name_title"] = calleeName
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            CallManager.sharedInstance.outgoingCall(handle: callerId, calleeId: calleeId, calleeName: calleeName, metaData: merged, callData: CallSessionRequest(
-                callerId: callerId,
-                callerName: callerName,
-                callerAvatar: callerAvatar,
+            CallManager.sharedInstance.outgoingCall(
+                handle: callerId,
                 calleeId: calleeId,
                 calleeName: calleeName,
                 calleeAvatar: calleeAvatar,
-                checkSum: checkSum
+                metaData: merged,
+                    callData: CallSessionRequest(
+                    callerId: callerId,
+                    callerName: callerName,
+                    callerAvatar: callerAvatar,
+                    calleeId: calleeId,
+                    calleeName: calleeName,
+                    calleeAvatar: calleeAvatar,
+                    checkSum: checkSum
             )) { error in
                 completion(error)
             }
@@ -235,7 +241,7 @@ public class NeoSdkCall: CallEventListener {
     private func showCallScreen(calleeName: String, callStatus: String, avatarUrl: String? = nil, metaData: [String: String] = [:]) {
         DispatchQueue.main.async {
             guard let topVC = self.getKeyWindowRootViewController() else {
-                print("❌ Failed to find top view controller")
+                print(" Failed to find top view controller")
                 return
             }
             
