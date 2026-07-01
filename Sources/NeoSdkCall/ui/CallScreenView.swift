@@ -84,12 +84,10 @@ public class CallScreenViewController: UIViewController {
         monitor.pathUpdateHandler = { path in
             // Reset timer setiap ada perubahan path
             self.checkTimer?.cancel()
-            
+
             if path.status == .unsatisfied {
-                // Delay 3 detik untuk memastikan benar-benar tidak ada koneksi
+                // Hanya tampilkan alert "No internet connection" jika panggilan BELUM terhubung (calling/connecting)
                 if !self.isConnected {
-                    
-                    
                     let task = DispatchWorkItem {
                         if self.monitor.currentPath.status == .unsatisfied {
                             DispatchQueue.main.async {
@@ -103,13 +101,12 @@ public class CallScreenViewController: UIViewController {
                             }
                         }
                     }
-                    
                     self.checkTimer = task
                     DispatchQueue.global().asyncAfter(deadline: .now() + 3, execute: task)
-                } else {
-                    // Kalau koneksi balik lagi
-                    self.isNetworkReallyDown = false
                 }
+            } else {
+                // Kalau koneksi balik lagi
+                self.isNetworkReallyDown = false
             }
         }
         monitor.start(queue: queue)
@@ -143,21 +140,20 @@ public class CallScreenViewController: UIViewController {
             if (self.isConnected) {
                 switch value {
                 case "weak":
-                    self.connectionLabel.text = "\(self.metaData["call_weak_signal"] ?? "Koneksi Tidak Stabil")"
-                    self.connectionLabel.textColor = .systemRed
+                    self.connectionLabel.text = "\(self.metaData["call_weak_signal"] ?? "Koneksi tidak stabil")"
+                    self.connectionLabel.textColor = .white
                     self.isConnectionLost = false
                 case "lost":
-                    self.connectionLabel.text = "\(self.metaData["call_lost_connection"] ?? "Koneksi Terputus")"
-                    self.connectionLabel.textColor = .systemRed
+                    self.connectionLabel.text = "\(self.metaData["call_lost_connection"] ?? "")..."
+                    self.connectionLabel.textColor = .white
                     self.isConnectionLost = true
                 case "reconnecting":
-                    self.connectionLabel.text = "\(self.metaData["call_reconnecting"] ?? "Reconnecting")..."
-                    self.connectionLabel.textColor = .systemRed
+                    self.connectionLabel.text = self.metaData["call_reconnecting"] ?? "Koneksi tidak stabil"
+                    self.connectionLabel.textColor = .white
                     self.isConnectionLost = true
                 default:
                     self.connectionLabel.text = ""
                     self.isConnectionLost = false
-
                 }
             } else if (notification.userInfo?["error"] != nil) {
                 self.showErrorConnectionAlert(text: self.metaData[value] ?? value, icon: AsssetKitImageProvider.Resources.errorIcon.image)
@@ -181,27 +177,7 @@ public class CallScreenViewController: UIViewController {
             self.nameLabel.text = self.calleeName
         }
         
-        if !avatarString.isEmpty {
-            if avatarString.hasPrefix("http"), let url = URL(string: avatarString) {
-                URLSession.shared.dataTask(with: url) { data, _, _ in
-                    if let data = data {
-                        DispatchQueue.main.async {
-                            self.avatarImageView.image = UIImage(data: data)
-                        }
-                    }
-                }.resume()
-            } else {
-                DispatchQueue.main.async {
-                    self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "vector") ?? ImageAsset(name: "vector").image
-                    self.avatarImageView.backgroundColor = .white
-                }
-            }
-        } else {
-            DispatchQueue.main.async {
-                self.avatarImageView.image = UIImage(named: "vector") ?? ImageAsset(name: "vector").image
-                self.avatarImageView.backgroundColor = .white
-            }
-        }
+        self.loadAvatar(from: avatarString)
     }
     
     @objc private func handleCallStatus(_ notification: Notification) {
@@ -235,12 +211,10 @@ public class CallScreenViewController: UIViewController {
                 }
             case .ended:
                 if self.isConnectionLost {
-                    self.statusLabel.text = self.getLocalizedStatus("call_connection_lost")
-                    self.statusLabel.text = "Panggilan Terputus"
-                    self.endedCall(
-                        delay: 0.3
-                    )
-                }else {
+                    self.statusLabel.text = self.getLocalizedStatus("call_lost_connection")
+                    self.connectionLabel.text = ""
+                    self.endedCall(delay: 2.0)
+                } else {
                     self.statusLabel.text = self.getLocalizedStatus("call_end")
                     self.endedCall(delay: 0.5)
                 }
@@ -333,17 +307,6 @@ public class CallScreenViewController: UIViewController {
         //}
         //SocketManagerSignaling.shared.disconnect()
     }
-    
-    /*@objc private func dismissScreen() {
-        if (self.pendingDismissed) {
-            self.dismissed = true
-            self.pendingDismissed = false
-            //print("dismissed")
-            //CallService.sharedInstance.callVC = nil
-            CallService.sharedInstance.closedCall()
-        }
-    }*/
-    
     deinit {
         NotificationCenter.default.removeObserver(self)
         monitor.cancel()
@@ -351,7 +314,8 @@ public class CallScreenViewController: UIViewController {
     
     func compatibleImage(named: String, systemName: String) -> UIImage? {
         if #available(iOS 13.0, *) {
-            return UIImage(systemName: systemName) ?? UIImage(named: named)
+            let config = UIImage.SymbolConfiguration(pointSize: 28, weight: .regular)
+            return UIImage(systemName: systemName, withConfiguration: config) ?? UIImage(named: named)
         } else {
             return UIImage(named: named)
         }
@@ -378,20 +342,21 @@ public class CallScreenViewController: UIViewController {
             return val
         }
         switch key {
-        case "call_incoming": return "Incoming"
+        case "call_incoming": return "Panggilan Masuk"
         case "call_calling": return "Menghubungi..."
         case "call_connected": return "Terhubung"
+        case "call_ongoing": return "Terhubung"
         case "call_end": return "Panggilan Berakhir"
         case "call_lost_connection": return "Panggilan Terputus"
-        case "call_accepted": return "Call Accepted"
-        case "call_connecting": return "Menghubungkan"
-        case "call_reconnecting": return "Reconnecting..."
-        case "call_ringing": return "Ringing..."
-        case "call_answering": return "Answering"
-        case "call_busy": return "Busy"
-        case "call_refused": return "Declined"
-        case "call_timeout": return "No Answer"
-        case "call_cancel": return "Canceled"
+        case "call_accepted": return "Panggilan Diterima"
+        case "call_connecting": return "Menghubungi..."
+        case "call_reconnecting": return "Menghubungi kembali..."
+        case "call_ringing": return "Berdering..."
+        case "call_answering": return "Menjawab..."
+        case "call_busy": return "Sibuk"
+        case "call_refused": return "Ditolak"
+        case "call_timeout": return "Tidak Ada Jawaban"
+        case "call_cancel": return "Dibatalkan"
         default:
             let cleanKey = key.replacingOccurrences(of: "call_", with: "")
             return cleanKey.isEmpty ? "Calling" : cleanKey.capitalized
@@ -443,7 +408,7 @@ public class CallScreenViewController: UIViewController {
         
         connectionLabel.text = ""
         connectionLabel.font = UIFont.systemFont(ofSize: 14)
-        connectionLabel.textColor = UIColor(red: 1.0, green: 0.7, blue: 0.7, alpha: 1.0)
+        connectionLabel.textColor = .white
         connectionLabel.textAlignment = .center
         
         callerInfoStack = UIStackView(arrangedSubviews: [avatarImageView, nameLabel, durationLabel, connectionLabel])
@@ -453,20 +418,7 @@ public class CallScreenViewController: UIViewController {
         callerInfoStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(callerInfoStack)
  
-        if let avatarString = avatarUrl, !avatarString.isEmpty {
-            if avatarString.hasPrefix("http"), let url = URL(string: avatarString) {
-                URLSession.shared.dataTask(with: url) { data, _, _ in
-                    if let data = data { DispatchQueue.main.async { self.avatarImageView.image = UIImage(data: data) } }
-                }.resume()
-            } else {
-                // Jika bukan URL http, anggap itu adalah nama gambar dari Assets lokal klien
-                self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "vector") ?? ImageAsset(name: "vector").image
-                self.avatarImageView.backgroundColor = .white
-            }
-        } else {
-            self.avatarImageView.image = UIImage(named: "vector") ?? ImageAsset(name: "vector").image
-            self.avatarImageView.backgroundColor = .white
-        }
+        self.loadAvatar(from: avatarUrl)
 
         let infoCard = UIView()
         infoCard.backgroundColor = UIColor(white: 1.0, alpha: 0.15)
@@ -749,6 +701,54 @@ extension CallScreenViewController: DTMFKeypadDelegate {
         }
     }
 
+    private func loadAvatar(from avatarString: String?) {
+        guard let avatarString = avatarString, !avatarString.isEmpty else {
+            DispatchQueue.main.async {
+                self.avatarImageView.image = UIImage(named: "vector") ?? ImageAsset(name: "vector").image
+                self.avatarImageView.backgroundColor = .white
+            }
+            return
+        }
+        
+        if avatarString.hasPrefix("http") {
+            let cleanString = avatarString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? avatarString
+            guard let url = URL(string: cleanString) else {
+                print("[NeoSdkCall] Invalid URL string: \(avatarString)")
+                DispatchQueue.main.async {
+                    self.avatarImageView.image = UIImage(named: "vector") ?? ImageAsset(name: "vector").image
+                    self.avatarImageView.backgroundColor = .white
+                }
+                return
+            }
+            
+            URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+                guard let self = self else { return }
+                if let error = error {
+                    print("[NeoSdkCall] Error downloading avatar: \(error.localizedDescription)")
+                }
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("[NeoSdkCall] Avatar HTTP Status Code: \(httpResponse.statusCode)")
+                }
+                
+                if let data = data, let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        self.avatarImageView.image = image
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        self.avatarImageView.image = UIImage(named: "vector") ?? ImageAsset(name: "vector").image
+                        self.avatarImageView.backgroundColor = .white
+                    }
+                }
+            }.resume()
+        } else {
+            DispatchQueue.main.async {
+                self.avatarImageView.image = UIImage(named: avatarString) ?? UIImage(named: "vector") ?? ImageAsset(name: "vector").image
+                self.avatarImageView.backgroundColor = .white
+            }
+        }
+    }
+
 }
 
 extension UIColor {
@@ -782,4 +782,3 @@ extension UIColor {
     )
   }
 }
-	
