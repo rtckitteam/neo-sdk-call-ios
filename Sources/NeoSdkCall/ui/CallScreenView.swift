@@ -343,13 +343,13 @@ public class CallScreenViewController: UIViewController {
         }
         switch key {
         case "call_incoming": return "Panggilan Masuk"
-        case "call_calling": return "Menghubungi..."
+        case "call_calling": return "Menghubungi"
         case "call_connected": return "Terhubung"
         case "call_ongoing": return "Terhubung"
         case "call_end": return "Panggilan Berakhir"
         case "call_lost_connection": return "Panggilan Terputus"
         case "call_accepted": return "Panggilan Diterima"
-        case "call_connecting": return "Menghubungi..."
+        case "call_connecting": return "Menghubungkan"
         case "call_reconnecting": return "Menghubungi kembali..."
         case "call_ringing": return "Berdering..."
         case "call_answering": return "Menjawab..."
