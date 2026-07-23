@@ -611,12 +611,16 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     func postCallStatus(_ status: CallStatus) {
-        delegate?.onCallStateChanged(status)
-        NotificationCenter.default.post(name: .callStatusChanged, object: nil, userInfo: ["status" : status.rawValue])
+            if status == .ended || status == .refused || status == .cancel || status == .missed {
+                NotificationManager.shared.clearCallNotifications()
+            }
+            
+            delegate?.onCallStateChanged(status)
+            NotificationCenter.default.post(name: .callStatusChanged, object: nil, userInfo: ["status" : status.rawValue])
     }
     
     private func postNetworkStatus(_ status: String) {
-        NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["error" : status])
+        NotificationCenter.default.post(name: .callStatusChanged, object: nil, userInfo: ["error" : status])
     }
     
     private func configureAudioSession() {

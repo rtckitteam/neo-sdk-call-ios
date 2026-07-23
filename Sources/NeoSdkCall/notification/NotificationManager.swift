@@ -73,6 +73,13 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         post(title: "Missed call", body: "Missed call from \(caller)", id: "missed")
     }
     
+    func clearCallNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removeDeliveredNotifications(withIdentifiers: ["incoming", "outgoing", "ongoing", "missed"])
+        center.removePendingNotificationRequests(withIdentifiers: ["incoming", "outgoing", "ongoing", "missed"])
+    }
+    
+    
     // Optional: Handle user actions on notifications
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
