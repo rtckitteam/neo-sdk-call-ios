@@ -620,7 +620,7 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     private func postNetworkStatus(_ status: String) {
-        NotificationCenter.default.post(name: .callStatusChanged, object: nil, userInfo: ["error" : status])
+        NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["error" : status])
     }
     
     private func configureAudioSession() {
