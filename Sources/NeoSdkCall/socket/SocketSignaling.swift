@@ -69,6 +69,10 @@ class SocketSignaling: NSObject {
     func connect(wssUrl: URL, token: String, uuid: UUID, completion: @escaping (SocketIOClientStatus) -> Void) {
         self.uuid = uuid
         isCallConnected = false
+        // SocketSignaling singleton: reset flag dari call sebelumnya
+        isClosed = false
+        isCallTerminated = false
+        reconnectCount = 0
         webrtcManager = WebRTCManager()
         self.webrtcManager?.callback = self
         manager = SocketManager(socketURL: wssUrl,
@@ -433,6 +437,7 @@ class SocketSignaling: NSObject {
     
     private func forceTerminateCall() {
         if isCallTerminated { return }
+        isCallTerminated = true
 
         print("FORCE TERMINATE CALL")
 

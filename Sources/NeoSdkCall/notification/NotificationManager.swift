@@ -4,7 +4,14 @@ import CallKit
 
 final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationManager()
-    
+
+    static let callNotificationIds = ["incoming", "outgoing", "ongoing", "missed"]
+
+    // Naik setiap kali notifikasi dibersihkan. Dipakai untuk mendeteksi notifikasi
+    // yang selesai di-add (async) setelah call sudah berakhir.
+    private var clearGeneration = 0
+    private let lock = NSLock()
+
     private override init() {
         super.init()
         let center = UNUserNotificationCenter.current()
@@ -48,10 +55,23 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         
         // Immediate notification (no trigger)
         let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
-        
-        UNUserNotificationCenter.current().add(request) { error in
+
+        lock.lock()
+        let generation = clearGeneration
+        lock.unlock()
+
+        UNUserNotificationCenter.current().add(request) { [weak self] error in
             if let error = error {
                 print("Failed to add notification: \(error)")
+                return
+            }
+            guard let self = self else { return }
+            self.lock.lock()
+            let wasCleared = self.clearGeneration != generation
+            self.lock.unlock()
+            // Call sudah berakhir sebelum notifikasi ini selesai ditambahkan
+            if wasCleared {
+                self.removeNotifications(ids: [id])
             }
         }
         print("Notification posted \(title) id \(id) body \(body)")
@@ -74,9 +94,21 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
     
     func clearCallNotifications() {
+        lock.lock()
+        clearGeneration += 1
+        lock.unlock()
+        removeNotifications(ids: NotificationManager.callNotificationIds)
+    }
+
+    // Hapus notifikasi "Calling ..." saat call sudah tersambung
+    func clearOutgoingNotification() {
+        removeNotifications(ids: ["outgoing"])
+    }
+
+    private func removeNotifications(ids: [String]) {
         let center = UNUserNotificationCenter.current()
-        center.removeDeliveredNotifications(withIdentifiers: ["incoming", "outgoing", "ongoing", "missed"])
-        center.removePendingNotificationRequests(withIdentifiers: ["incoming", "outgoing", "ongoing", "missed"])
+        center.removeDeliveredNotifications(withIdentifiers: ids)
+        center.removePendingNotificationRequests(withIdentifiers: ids)
     }
     
     

@@ -57,8 +57,15 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     private func requestTransaction(transaction : CXTransaction, completion: @escaping (Bool) -> Void) {
         
         callController?.request(transaction, completion: { (error : Error?) in
-            
-            if error != nil {
+
+            if let error = error {
+                print("CallKit transaction failed: \(error)")
+                // Pastikan call tetap berakhir di CallKit walau transaksi end gagal
+                for action in transaction.actions {
+                    if let endAction = action as? CXEndCallAction {
+                        self.provider?.reportCall(with: endAction.callUUID, endedAt: Date(), reason: .remoteEnded)
+                    }
+                }
                 completion(false)
             } else {
                 completion(true)
@@ -611,8 +618,13 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     func postCallStatus(_ status: CallStatus) {
-            if status == .ended || status == .refused || status == .cancel || status == .missed {
+            switch status {
+            case .ended, .refused, .cancel, .missed, .busy, .timeout, .call_error:
                 NotificationManager.shared.clearCallNotifications()
+            case .accepted, .connected, .ongoing:
+                NotificationManager.shared.clearOutgoingNotification()
+            default:
+                break
             }
             
             delegate?.onCallStateChanged(status)
