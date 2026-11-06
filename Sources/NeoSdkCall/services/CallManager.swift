@@ -55,7 +55,17 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     private func requestTransaction(transaction : CXTransaction, completion: @escaping (Bool) -> Void) {
-        
+        // Call yang sudah berakhir di CallKit (mis. ditutup dari UI sistem atau setelah provider reset)
+        // akan menghasilkan error unknownCallUUID (code 4). Lewati transaksi, cukup jalankan cleanup.
+        let endActions = transaction.actions.compactMap { $0 as? CXEndCallAction }
+        if !endActions.isEmpty && endActions.count == transaction.actions.count {
+            let activeUUIDs = Set(callObserver.calls.filter { !$0.hasEnded }.map { $0.uuid })
+            if endActions.allSatisfy({ !activeUUIDs.contains($0.callUUID) }) {
+                completion(true)
+                return
+            }
+        }
+
         callController?.request(transaction, completion: { (error : Error?) in
 
             if let error = error {
