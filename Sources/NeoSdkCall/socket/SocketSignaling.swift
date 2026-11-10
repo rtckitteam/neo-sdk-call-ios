@@ -1,3 +1,4 @@
+
 //
 //  SocketSignaling.swift
 //  CicareSdkCall
@@ -69,10 +70,13 @@ class SocketSignaling: NSObject {
     func connect(wssUrl: URL, token: String, uuid: UUID, completion: @escaping (SocketIOClientStatus) -> Void) {
         self.uuid = uuid
         isCallConnected = false
-        // SocketSignaling singleton: reset flag dari call sebelumnya
         isClosed = false
         isCallTerminated = false
+        isConnected = false
+        isReconnecting = false
         reconnectCount = 0
+        callState = nil
+        pendingActions.removeAll()
         webrtcManager = WebRTCManager()
         self.webrtcManager?.callback = self
         manager = SocketManager(socketURL: wssUrl,
@@ -224,22 +228,32 @@ class SocketSignaling: NSObject {
             CallManager.sharedInstance.callRinging()
         }
         socket?.on("HANGUP") { _, _ in
-            if (self.callState != .ended && self.callState != .refused  && self.callState != .busy) {
-                CallManager.sharedInstance.endedCall(uuid: self.uuid!, callState: .ended)
+            if (self.callState != .ended && self.callState != .refused && self.callState != .busy) {
+                if let uuid = self.uuid {
+                    CallManager.sharedInstance.endedCall(uuid: uuid, callState: .ended)
+                } else {
+                    NotificationManager.shared.clearCallNotifications()
+                }
             }
             self.send(event: "CLEARING_SESSION", data: [:])
             self.close()
         }
         socket?.on("NO_ANSWER") { _, _ in
-            CallManager.sharedInstance.endedCall(uuid: self.uuid!, callState: .timeout)
+            if let uuid = self.uuid {
+                CallManager.sharedInstance.endedCall(uuid: uuid, callState: .timeout)
+            } else {
+                NotificationManager.shared.clearCallNotifications()
+            }
             self.send(event: "CLEARING_SESSION", data: [:])
             self.callState = nil
-            //self.disconnect()
+            self.close()
         }
         socket?.on("REJECTED") { _, _ in
+            NotificationManager.shared.clearCallNotifications()
             CallManager.sharedInstance.callRejected()
         }
         socket?.on("BUSY") { _, _ in
+            NotificationManager.shared.clearCallNotifications()
             CallManager.sharedInstance.callBusy()
         }
         socket?.on("SDP_OFFER") { data, _ in
@@ -414,36 +428,48 @@ class SocketSignaling: NSObject {
 //        timer?.invalidate()
 //        timer = nil
 //        socket = nil
-//        
+//
 //    }
     func close() {
         if isClosed { return }
+
         isClosed = true
+        isCallTerminated = true
+
+        print("[Socket] Closing call session")
 
         isConnected = false
         isReconnecting = false
 
-        CallManager.sharedInstance.endCall(uuid: self.uuid!)
-
-        socket?.disconnect()
-        socket?.removeAllHandlers()
-
         timer?.invalidate()
         timer = nil
 
+        socket?.removeAllHandlers()
+        socket?.disconnect()
+
         socket = nil
         manager = nil
+
+        releaseWebrtc()
+
+        NotificationManager.shared.clearCallNotifications()
+
+        uuid = nil
     }
     
     private func forceTerminateCall() {
         if isCallTerminated { return }
         isCallTerminated = true
+        isClosed = true
 
         print("FORCE TERMINATE CALL")
 
         self.callState = .ended
 
-        CallManager.sharedInstance.endedCall(uuid: self.uuid!, callState: .ended)
+        NotificationManager.shared.clearCallNotifications()
+        if let uuid = self.uuid {
+            CallManager.sharedInstance.endedCall(uuid: uuid, callState: .ended)
+        }
 
         self.send(event: "CLEARING_SESSION", data: [:])
 
@@ -455,12 +481,12 @@ class SocketSignaling: NSObject {
         timer?.invalidate()
         timer = nil
         reconnectCount = 0
-            isReconnecting = false
-
+        isReconnecting = false
 
         socket = nil
         manager = nil
         isConnected = false
+        uuid = nil
     }
     private func handleFailure() {
         reconnectCount += 1
@@ -497,10 +523,10 @@ extension SocketSignaling: WebRTCEventCallback {
         switch state {
 //        case .disconnected:
 //            print("ice state disconnected")
-//            
+//
 ////            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "reconnecting"])
 //            NotificationCenter.default.post(name: .callNetworkChanged, object: nil, userInfo: ["signalStrength": "weak"])
-//            
+//
 //            break
 //        case .failed:
 //            print("ice state failed")
