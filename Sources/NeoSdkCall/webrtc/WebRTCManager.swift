@@ -31,7 +31,13 @@ class WebRTCManager: NSObject {
     }
     
     func reinit() {
-        initializePeerConnectionFactory()
+        close()
+
+        guard peerConnectionFactory != nil else {
+            initializePeerConnectionFactory()
+            return
+        }
+
         createPeerConnection()
     }
 
@@ -217,11 +223,25 @@ class WebRTCManager: NSObject {
               }
 
     func close() {
-        if (peerConnection.iceConnectionState == .connected ||
-            peerConnection.iceConnectionState == .completed) {
-            peerConnection.close()
-            RTCShutdownInternalTracer()
+        guard let pc = peerConnection else {
+            print("[WebRTC] PeerConnection already released")
+            return
         }
+
+        print("[WebRTC] Closing PeerConnection. ICE state: \(pc.iceConnectionState)")
+
+        // Hentikan callback dari peer connection yang akan ditutup.
+        pc.delegate = nil
+
+        // Tutup dalam kondisi apa pun, bukan hanya connected/completed.
+        if pc.signalingState != .closed {
+            pc.close()
+        }
+
+        peerConnection = nil
+        audioTrack = nil
+
+        print("[WebRTC] PeerConnection closed and released")
     }
 }
 

@@ -223,7 +223,7 @@ public class CallScreenViewController: UIViewController {
             case .connected:
                 self.isConnected = true
                 self.statusLabel.text = self.getLocalizedStatus("call_connected")
-                //NotificationManager.shared.showOngoingCallNotification(callee: self.calleeName)
+                NotificationManager.shared.showOngoingCallNotification(callee: self.calleeName)
                 self.muteButton?.isEnabled = true
                 self.keypadButton?.isEnabled = true
                 self.startCallDurationTimer()

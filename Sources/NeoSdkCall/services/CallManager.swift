@@ -54,16 +54,85 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
         callController = CXCallController.init()
     }
     
-    private func requestTransaction(transaction : CXTransaction, completion: @escaping (Bool) -> Void) {
+    private func requestTransaction(
+        transaction: CXTransaction,
+        completion: @escaping (Bool) -> Void
+    ) {
+
+        // DEBUG: Cek status aktual CallKit
+        print("========== CALLKIT OBSERVER ==========")
+
+        let activeCalls = callObserver.calls
+
+        for call in activeCalls {
+            print("""
+            [CallKit Observer]
+            UUID: \(call.uuid)
+            Ended: \(call.hasEnded)
+            Connected: \(call.hasConnected)
+            """)
+        }
         
-        callController?.request(transaction, completion: { (error : Error?) in
+        for action in transaction.actions {
+            if let end = action as? CXEndCallAction {
+                print(" APP REQUESTED END CALL: \(end.callUUID)")
+            }
+
+            if let start = action as? CXStartCallAction {
+                print(" APP REQUESTED START CALL: \(start.callUUID)")
+            }
             
-            if error != nil {
+            print("END CALL REQUEST STACK TRACE")
+
+            Thread.callStackSymbols.prefix(25).forEach {
+                print($0)
+            }
+
+            print("END CALL REQUEST STACK TRACE END\n")
+        }
+        print("========== CALLKIT ACTIVE CALLS ==========")
+
+        for call in callObserver.calls {
+            print("""
+            UUID: \(call.uuid)
+            Outgoing: \(call.isOutgoing)
+            Connected: \(call.hasConnected)
+            Ended: \(call.hasEnded)
+            """)
+        }
+
+        print("Requested UUIDs: \(Array(calls.keys))")
+        print("Current UUID: \(String(describing: currentCall))")
+        print("==========================================")
+        
+        
+
+        print("======================================")
+
+        callController?.request(transaction) { error in
+
+            if let error = error {
+                print("========== CALLKIT ERROR ==========")
+                print("Error: \(error.localizedDescription)")
+
+                for action in transaction.actions {
+                    print("Action: \(type(of: action))")
+
+                    if let endAction = action as? CXEndCallAction {
+                        print("END CALL UUID: \(endAction.callUUID)")
+                    }
+                }
+
+                print("Current Call: \(String(describing: self.currentCall))")
+                print("Registered Calls: \(Array(self.calls.keys))")
+                print("===================================")
+
                 completion(false)
             } else {
+                print("[CallKit] Transaction successful")
                 completion(true)
             }
-        })
+        }
     }
     
     private func extractServerData(
@@ -117,6 +186,15 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
+        print("""
+           ========== CALL OBSERVER CHANGED ==========
+           UUID: \(call.uuid)
+           Outgoing: \(call.isOutgoing)
+           Connected: \(call.hasConnected)
+           Ended: \(call.hasEnded)
+           ===========================================
+           """)
+
         isOutgoing = call.isOutgoing
         if call.hasEnded {
             isInCall = false
@@ -438,11 +516,37 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
         postCallStatus(.ringing)
     }
     
+    func answerIncomingCallFromNotification(uuid: UUID?) {
+        guard let uuid = uuid else {
+            print("[NeoSdkCall] Invalid incoming call UUID")
+            return
+        }
+
+        guard calls[uuid] != nil else {
+            print("[NeoSdkCall] Call not found: \(uuid)")
+            return
+        }
+
+        let answerAction = CXAnswerCallAction(call: uuid)
+        let transaction = CXTransaction()
+        transaction.addAction(answerAction)
+
+        requestTransaction(transaction: transaction) { success in
+            if success {
+                print("[NeoSdkCall] Answer call transaction submitted")
+            } else {
+                print("[NeoSdkCall] Failed to answer call")
+            }
+        }
+    }
+    
     func rejectCall() {
         let incomingCalls = calls.filter { $0.value.callType == .INCOMING && $0.value.callStatus == .incoming }
         for (uuid, _) in incomingCalls {
             rejectCall(uuid: uuid)
         }
+        
+        
     }
     
     func rejectCall(uuid: UUID) {
@@ -457,19 +561,39 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     func cancelCall(uuid: UUID) {
-        let endCallAction = CXEndCallAction.init(call:uuid)
-        let transaction = CXTransaction.init()
+        guard calls[uuid] != nil else {
+            print("[CallManager] Call already removed: \(uuid)")
+            return
+        }
+
+        let endCallAction = CXEndCallAction(call: uuid)
+        let transaction = CXTransaction()
         transaction.addAction(endCallAction)
-        requestTransaction(transaction: transaction) { success in
+
+        requestTransaction(transaction: transaction) { [weak self] success in
+            guard let self = self else { return }
+
+            if success {
+                print("[CallManager] Cancel transaction accepted: \(uuid)")
+                // Cleanup akan dilakukan oleh CXEndCallAction callback.
+                return
+            }
+
+            print("[CallManager] CallKit EndCall failed, using local cleanup: \(uuid)")
+
+            guard self.calls[uuid] != nil else { return }
+
             SocketSignaling.shared.setCallState(.cancel)
             self.delegate?.onCallStateChanged(.cancel)
-            self.postCallStatus(.ended)
-            if (self.currentCall == uuid) {
+
+            if self.currentCall == uuid {
                 SocketSignaling.shared.releaseWebrtc()
                 self.dismissCallScreen()
                 self.currentCall = nil
             }
+
             self.calls.removeValue(forKey: uuid)
+            self.postCallStatus(.ended)
         }
     }
     
@@ -489,42 +613,76 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     func endCall(uuid: UUID) {
-        let endCallAction = CXEndCallAction.init(call:uuid)
-        let transaction = CXTransaction.init()
+
+        //  UUID masih terdaftar
+        guard calls[uuid] != nil else {
+            print("[CallManager] Ignore duplicate EndCall: \(uuid)")
+            return
+        }
+
+        let endCallAction = CXEndCallAction(call: uuid)
+        let transaction = CXTransaction()
         transaction.addAction(endCallAction)
+
         requestTransaction(transaction: transaction) { success in
+
+            guard success else {
+                print("[CallManager] EndCall transaction failed: \(uuid)")
+                return
+            }
+
             SocketSignaling.shared.setCallState(.ended)
             self.postCallStatus(.ended)
-            if (self.currentCall == uuid) {
+
+            if self.currentCall == uuid {
                 SocketSignaling.shared.releaseWebrtc()
                 self.dismissCallScreen()
                 self.currentCall = nil
             }
+
             self.calls.removeValue(forKey: uuid)
         }
     }
     
     func endedCall(uuid: UUID, callState: CallStatus) {
-        
-        let endCallAction = CXEndCallAction.init(call:uuid)
-        let transaction = CXTransaction.init()
-        transaction.addAction(endCallAction)
-        requestTransaction(transaction: transaction) { success in
-            self.postCallStatus(callState)
-            if (self.currentCall == uuid) {
-                SocketSignaling.shared.releaseWebrtc()
-                self.dismissCallScreen()
-                self.currentCall = nil
-            }
-            self.calls.removeValue(forKey: uuid)
-            
+        print("[CallManager] Remote call ended: \(uuid)")
+
+        // Beri tahu CallKit bahwa panggilan berakhir dari sisi remote/server.
+        provider?.reportCall(
+            with: uuid,
+            endedAt: Date(),
+            reason: .remoteEnded
+        )
+
+        // Hindari cleanup berulang.
+        guard calls[uuid] != nil || currentCall == uuid else {
+            print("[CallManager] Call already cleaned up: \(uuid)")
+            return
         }
+
+        SocketSignaling.shared.setCallState(callState)
+        delegate?.onCallStateChanged(callState)
+
+        if currentCall == uuid {
+            SocketSignaling.shared.releaseWebrtc()
+            dismissCallScreen()
+            currentCall = nil
+        }
+
+        calls.removeValue(forKey: uuid)
+        postCallStatus(.ended)
+
+        print("[CallManager] Remote call cleanup completed: \(uuid)")
     }
     
     func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
-        //configureAudioSession()
-        provider.reportOutgoingCall(with: action.callUUID, startedConnectingAt: nil)
-        provider.reportOutgoingCall(with: action.callUUID, connectedAt: nil)
+        print("[CallKit] StartCallAction: \(action.callUUID)")
+
+        provider.reportOutgoingCall(
+            with: action.callUUID,
+            startedConnectingAt: Date()
+        )
+
         action.fulfill()
     }
     
@@ -604,15 +762,25 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
     }
     
     func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
-        if (calls[action.callUUID]?.callStatus == .incoming) {
-            rejectCall()
-        }
+        print("========== END ACTION RECEIVED ==========")
+        print("UUID: \(action.callUUID)")
+        print("Current Call: \(String(describing: currentCall))")
+        print("Call Exists: \(calls[action.callUUID] != nil)")
+        print("Call Status: \(String(describing: calls[action.callUUID]?.callStatus))")
+        print("Call Type: \(String(describing: calls[action.callUUID]?.callType))")
+        print("==========================================")
+
         action.fulfill()
     }
     
     func postCallStatus(_ status: CallStatus) {
-            if status == .ended || status == .refused || status == .cancel || status == .missed {
+            switch status {
+            case .ended, .refused, .cancel, .missed, .busy, .timeout, .call_error:
                 NotificationManager.shared.clearCallNotifications()
+            case .accepted, .connected, .ongoing:
+                NotificationManager.shared.clearOutgoingNotification()
+            default:
+                break
             }
             
             delegate?.onCallStateChanged(status)
@@ -700,6 +868,25 @@ final class CallManager: NSObject, CallServiceDelegate, CXCallObserverDelegate, 
             self.callWindow = nil
             self.callVC = nil
             self.screenIsShown = false
+        }
+    }
+    
+    func bringCurrentCallScreenToFront() {
+        DispatchQueue.main.async {
+            guard let uuid = self.currentCall,
+                  let call = self.calls[uuid] else {
+                print("[NeoSdkCall] No active call")
+                return
+            }
+
+            if self.screenIsShown {
+                self.callWindow?.makeKeyAndVisible()
+            } else {
+                self.showCallScreen(
+                    uuid: uuid,
+                    callStatus: call.callStatus?.rawValue ?? "connecting"
+                )
+            }
         }
     }
     
@@ -805,7 +992,7 @@ func decrypt(cipher: String, encryptionKey: String) -> String? {
         let decryptedData = buffer.prefix(numBytesDecrypted)
         return String(data: decryptedData, encoding: .utf8)
     } else {
-        print("❌ Dekripsi gagal dengan status \(cryptStatus)")
+        print(" Dekripsi gagal dengan status \(cryptStatus)")
         return nil
     }
 }
@@ -828,4 +1015,6 @@ extension Data {
         }
         self = data
     }
+    
+    
 }
